@@ -78,6 +78,9 @@ One advantage of `maim` in this use case is that it doesn't require pressing
 Check out the [r/linux](https://www.reddit.com/r/linux/comments/10icyjo/fast_ocr_to_clipboard/) discussion on this blog post.
 
 Thanks everyone for the suggestions! I have updated this post with them in mind.
+You can see the diff
+[here](https://github.com/willbush/blog/commit/145becf969d64074c2761aa7669cf57e96c7c8f8)
+if you want to see what changed.
 
 ---
 
