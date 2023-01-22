@@ -23,6 +23,8 @@ flameshot gui --raw \
   | xclip -in -selection clipboard
 ```
 
+<!-- more -->
+
 - [flameshot](https://github.com/flameshot-org/flameshot) ::  Powerful yet simple to use screenshot software
 - [tesseract](https://github.com/tesseract-ocr/tesseract) :: Tesseract Open Source OCR Engine
 - [xclip](https://github.com/astrand/xclip) :: Command line interface to the X11 clipboard
