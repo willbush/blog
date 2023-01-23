@@ -2,7 +2,7 @@
 #================ Docs: https://github.com/isunjn/serene/wiki ============================
 #=========================================================================================
 
-base_url = "https://willbush.netlify.app" # The domain of your site
+base_url = "https://willbush.dev" # The domain of your site
 title = "willbush"
 description = "Personal website of @willbush"
 default_language = "en"
