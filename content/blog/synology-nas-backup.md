@@ -260,9 +260,9 @@ history file was in a `tmp` directory.
 Increase your history size and set the history file to a permanent location:
 
 ```sh
-root@NAS:~# export "export HISTSIZE=10000" >> ~/.bashrc
-root@NAS:~# export "export HISTFILESIZE=10000" >> ~/.bashrc
-root@NAS:~# export "export HISTFILE=/root/.bash_history" >> ~/.bashrc
+root@NAS:~# echo "export HISTSIZE=10000" >> ~/.bashrc
+root@NAS:~# echo "export HISTFILESIZE=10000" >> ~/.bashrc
+root@NAS:~# echo "export HISTFILE=/root/.bash_history" >> ~/.bashrc
 ```
 
 ## Format external hard drive
