@@ -74,9 +74,9 @@ outdate_warn_text_before = "Note: This article was last updated "
 outdate_warn_text_after = " days ago and may be out of date."
 
 #============== Footer =============================================
-footer_copyright_name = "Will Bush"
-footer_copyright_year = "2023"
-# footer_custom = ""
+# footer_copyright_name = "Will Bush"
+# footer_copyright_year = "2023"
+footer_custom = "Licensed under CC BY-SA 4.0"
 footer_credits = true            # Whether to show "Powered by Zola and Serene" in footer
 
 #============== Comment and Web analytics config ====================

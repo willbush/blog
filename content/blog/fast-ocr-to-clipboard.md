@@ -9,7 +9,7 @@ tags = ["tools", "linux"]
 
 [extra]
 toc = true
-cc_license = false
+cc_license = true
 +++
 
 # Just give me the text
