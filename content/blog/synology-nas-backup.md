@@ -505,8 +505,8 @@ gave up this year and it was part of the reason I looked into another paid
 storage provider. On top of that, I failed to write down the steps as I did
 them, so I'm going to estimate again from memory. Here is the documentation I followed:
 
-- <https://docs.storj.io/dcs/how-tos/backup-with-restic>
-- <https://docs.storj.io/dcs/how-tos/sync-files-with-rclone/rclone-with-hosted-gateway>
+- [backup-with-restic](https://docs.storj.io/dcs/how-tos/backup-with-restic)
+- [rclone-with-hosted-gateway](https://docs.storj.io/dcs/how-tos/sync-files-with-rclone/rclone-with-hosted-gateway)
 - <https://rclone.org/storj/>
 
 I'm using their "S3 compatible hosted gateway" integration pattern to minimize upload.
