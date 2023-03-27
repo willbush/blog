@@ -23,6 +23,8 @@ and one supported by [rclone](https://rclone.org/). If you want to use another
 command line tool, much of the instructions I provide here should still be
 applicable.
 
+<!-- more -->
+
 # Motivation
 
 ## Raid redundancy is not a backup
