@@ -12,7 +12,7 @@ toc = true
 cc_license = true
 +++
 
-If your wanting to backup your Synology NAS, you probably just want to use one
+If you're wanting to backup your Synology NAS, you probably just want to use one
 of their off-the-shelf solutions in their Package Center. However, if you're
 stubborn like me and want to use the same CLI tool you use elsewhere, this post
 is for you. I'll describe how to use [restic](https://restic.net/) to backup
@@ -276,7 +276,7 @@ root on a Synology NAS, but there's good chance I'm missing something:
 
 Plug in the drive and print out the list of devices using `fdisk -l`:
 
-For me I see `/dev/sdq` is my external hard drive::
+For me I see `/dev/sdq` is my external hard drive:
 
 ```
 Disk /dev/sdq: 3.7 TiB, 4000752599040 bytes, 7813969920 sectors
