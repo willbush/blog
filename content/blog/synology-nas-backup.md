@@ -164,8 +164,8 @@ Installing Docker should be easy enough through the Package Center.
 
 ## Enable SSH
 
-- [How_to_login_to_DSM_with_root_permission_via_SSH_Telnet](https://kb.synology.com/en-id/DSM/tutorial/How_to_login_to_DSM_with_root_permission_via_SSH_Telnet)
-- <https://mariushosting.com/how-to-ssh-into-a-synology-nas/>
+- [offical docs](https://kb.synology.com/en-id/DSM/tutorial/How_to_login_to_DSM_with_root_permission_via_SSH_Telnet)
+- [unofficial blog post](https://mariushosting.com/how-to-ssh-into-a-synology-nas/)
 
 If you follow the instructions on the Synology website, you should be able to
 `ssh` into your NAS with an admin account.
