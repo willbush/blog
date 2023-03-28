@@ -582,7 +582,7 @@ $ sudo umount /mnt/media # unmount when done.
 
 # Cleanup
 
-It's worth nothing you should search and delete passwords and keys from your
+It's worth noting you should search and delete passwords and keys from your
 `history` when done. Since most of everything was done in Docker, there
 shouldn't be much to clean up.
 
