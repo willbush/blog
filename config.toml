@@ -67,7 +67,8 @@ back_to_top_button = true        # Whether to show Back-To-Top button
 progress_bar = true              # Whether to show reading progress bar
 cc_license = true                # Whether to show Creative-Commons statement [Can be overridden by page config]
 
-cc_license_statement = "This work is licensed under [CC BY-SA 4.0](http://creativecommons.org/licenses/by-sa/4.0/)."
+cc_license_statement = "This work is licensed under [CC BY 4.0](http://creativecommons.org/licenses/by/4.0/)."
+
 outdate_warn = false             # Whether to show outdate warning [Can be overridden by page config]
 outdate_warn_days = 365          # How many days will a post be outdated [Can be overridden by page config]
 outdate_warn_text_before = "Note: This article was last updated "
@@ -76,7 +77,7 @@ outdate_warn_text_after = " days ago and may be out of date."
 #============== Footer =============================================
 # footer_copyright_name = "Will Bush"
 # footer_copyright_year = "2023"
-footer_custom = "Licensed under CC BY-SA 4.0"
+footer_custom = "Licensed under CC BY 4.0"
 footer_credits = true            # Whether to show "Powered by Zola and Serene" in footer
 
 #============== Comment and Web analytics config ====================
