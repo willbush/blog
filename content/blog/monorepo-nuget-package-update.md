@@ -14,7 +14,7 @@ cc_license = true
 
 Ok first look into:
 
-https://learn.microsoft.com/en-us/nuget/consume-packages/Central-Package-Management
+<https://learn.microsoft.com/en-us/nuget/consume-packages/Central-Package-Management>
 
 Rest of this. I need to update, because I didn't know the above was possible at the time of writing.
 
