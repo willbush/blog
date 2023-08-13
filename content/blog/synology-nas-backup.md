@@ -120,7 +120,7 @@ per month after tax.
 ~~This year I added Wasabi because of it's S3 conformance, the backup steps are
 nearly exactly the same, and low cost.~~ - edit (2023-08-12) actually after some
 time using the service I found it to be much more expensive than Blackblaze B2
-~$6 / month. So I wouldn't recommend it if your usecase is similar to mine.
+~$6 / month. So I wouldn't recommend it if your use case is similar to mine.
 
 # Hardware
 
