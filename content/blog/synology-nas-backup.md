@@ -18,7 +18,7 @@ stubborn like me and want to use the same CLI tool you use elsewhere, this post
 is for you. I'll describe how to use [restic](https://restic.net/) to backup
 folders you care about on your Synology NAS to an external hard drive and S3
 conformant cloud storage providers that are [supported by
-restic](https://restic.readthedocs.io/en/stable/030_preparing_a_new_repo.html?highlight=wasabi#preparing-a-new-repository)
+restic](https://restic.readthedocs.io/en/stable/030_preparing_a_new_repo.html#preparing-a-new-repository)
 and one supported by [rclone](https://rclone.org/). If you want to use another
 command line tool, much of the instructions I provide here should still be
 applicable.
