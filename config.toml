@@ -16,7 +16,7 @@ taxonomies = [{ name = "tags" }, { name = "categories" }]
 [markdown]
 highlight_code = true
 extra_syntaxes = []
-highlight_theme = "one-dark"          # Code highlight theme, choose one at https://www.getzola.org/documentation/getting-started/configuration/#syntax-highlighting
+highlight_theme = "nord" # Code highlight theme, choose one at https://www.getzola.org/documentation/getting-started/configuration/#syntax-highlighting
 render_emoji = false
 external_links_target_blank = false
 external_links_no_follow = true
@@ -38,7 +38,7 @@ bio = "Man Down"                      # Your bio
 avatar = "img/avatar.webp"            # Your avatar
 links = [                             # Your links
     { name = "GitHub", icon = "github", url = "https://github.com/willbush" },
-    # { name = "Mastodon", icon = "ri-mastodon-line", url = "https://fosstodon.org/@willbush" },
+    { name = "Mastodon", icon = "mastodon", url = "https://fosstodon.org/@willbush" },
     { name = "Email", icon = "email", url = "mailto:will.g.bush@gmail.com" }
 ]
 
