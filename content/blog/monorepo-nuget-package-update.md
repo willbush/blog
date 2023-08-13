@@ -12,13 +12,15 @@ toc = true
 cc_license = true
 +++
 
-Ok first look into:
+{% important(header="Important") %}
+The following is out-of-date.
 
-<https://learn.microsoft.com/en-us/nuget/consume-packages/Central-Package-Management>
+A much simpler solution is to use the new dependabot beta feature called
+[groups](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#groups)
+and nuget [central package
+management](https://learn.microsoft.com/en-us/nuget/consume-packages/Central-Package-Management).
 
-<https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#groups>
-
-Rest of this. I need to update, because I didn't know the above was possible at the time of writing.
+{% end %}
 
 # The problem with dependabot
 
