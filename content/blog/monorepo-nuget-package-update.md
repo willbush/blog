@@ -16,6 +16,8 @@ Ok first look into:
 
 <https://learn.microsoft.com/en-us/nuget/consume-packages/Central-Package-Management>
 
+<https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#groups>
+
 Rest of this. I need to update, because I didn't know the above was possible at the time of writing.
 
 # The problem with dependabot
