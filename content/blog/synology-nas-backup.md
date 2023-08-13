@@ -117,8 +117,10 @@ on.
 Last year, 2022, Backblaze B2 cost for me was $3.20 for the year. About $0.27
 per month after tax.
 
-This year I added Wasabi because of it's S3 conformance, the backup steps are
-nearly exactly the same, and low cost.
+~~This year I added Wasabi because of it's S3 conformance, the backup steps are
+nearly exactly the same, and low cost.~~ - edit (2023-08-12) actually after some
+time using the service I found it to be much more expensive than Blackblaze B2
+~$6 / month. So I wouldn't recommend it if your usecase is similar to mine.
 
 # Hardware
 
@@ -464,41 +466,6 @@ root@NAS:~# docker run -it --rm \
   /volume1/backup-safe/ \
   /volume1/photo/
 ```
-
-## Wasabi
-
-Also see: <https://restic.readthedocs.io/en/latest/030_preparing_a_new_repo.html#wasabi>
-
-Initialize the restic repository if not done yet:
-
-```sh
-root@NAS:~# docker run -it --rm \
-  -e AWS_ACCESS_KEY_ID='<YOUR-WASABI-ACCESS-KEY-ID>' \
-  -e AWS_SECRET_ACCESS_KEY='<YOUR-WASABI-SECRET-ACCESS-KEY>' \
-  restic/restic \
-  -r s3:<WASABI-SERVICE-URL>/<WASABI-BUCKET-NAME> \
-  init
-```
-
-Note `-e` is a way to pass environment variables to the container.
-
-Backup:
-
-```sh
-root@NAS:~# docker run -it --rm \
-  -e AWS_ACCESS_KEY_ID='<YOUR-WASABI-ACCESS-KEY-ID>' \
-  -e AWS_SECRET_ACCESS_KEY='<YOUR-WASABI-SECRET-ACCESS-KEY>' \
-  -v /volume1:/volume1 \
-  restic/restic \
-  -r s3:<WASABI-SERVICE-URL>/<WASABI-BUCKET-NAME> \
-  --cache-dir /volume1/.cache/restic/ \
-  --verbose \
-  backup \
-  /volume1/backup-safe/ \
-  /volume1/photo/
-```
-
-Replace `/volume1/*` folders with what you want to backup.
 
 ## Storj
 
