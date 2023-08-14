@@ -467,6 +467,48 @@ root@NAS:~# docker run -it --rm \
   /volume1/photo/
 ```
 
+## Wasabi
+
+{% note(header="Note") %}
+
+I no longer use Wasabi due to higher costs, but I'll leave this here incase you
+want to use it.
+
+{% end %}
+
+Also see: <https://restic.readthedocs.io/en/latest/030_preparing_a_new_repo.html#wasabi>
+
+Initialize the restic repository if not done yet:
+
+```sh
+root@NAS:~# docker run -it --rm \
+  -e AWS_ACCESS_KEY_ID='<YOUR-WASABI-ACCESS-KEY-ID>' \
+  -e AWS_SECRET_ACCESS_KEY='<YOUR-WASABI-SECRET-ACCESS-KEY>' \
+  restic/restic \
+  -r s3:<WASABI-SERVICE-URL>/<WASABI-BUCKET-NAME> \
+  init
+```
+
+Note `-e` is a way to pass environment variables to the container.
+
+Backup:
+
+```sh
+root@NAS:~# docker run -it --rm \
+  -e AWS_ACCESS_KEY_ID='<YOUR-WASABI-ACCESS-KEY-ID>' \
+  -e AWS_SECRET_ACCESS_KEY='<YOUR-WASABI-SECRET-ACCESS-KEY>' \
+  -v /volume1:/volume1 \
+  restic/restic \
+  -r s3:<WASABI-SERVICE-URL>/<WASABI-BUCKET-NAME> \
+  --cache-dir /volume1/.cache/restic/ \
+  --verbose \
+  backup \
+  /volume1/backup-safe/ \
+  /volume1/photo/
+```
+
+Replace `/volume1/*` folders with what you want to backup.
+
 ## Storj
 
 Ok fair warning, this is more involved than the other ones. In fact I almost
