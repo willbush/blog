@@ -158,7 +158,7 @@ jobs:
 >Note: If you want pull requests created by this action to trigger an on: push
 >or on: pull_request workflow then you cannot use the default GITHUB_TOKEN. See
 >the
->[documentation](https://github.com/peter-evans/create-pull-request/blob/main/docs/concepts-guidelines.md#triggering-further-workflow-runs)
+>[documentation](https://github.com/peter-evans/create-pull-request/blob/fe61cf72ef9924a9a17e07f183068da1a0b49f06/docs/concepts-guidelines.md#triggering-further-workflow-runs)
 >here for workarounds. — <cite>[^1]</cite>
 
 # Run GitHub action locally
@@ -184,4 +184,4 @@ dotnet tool install -g dotnet-outdated`
 
 ---
 
-[^1]: <https://github.com/peter-evans/create-pull-request#action-inputs>
+[^1]: <https://github.com/peter-evans/create-pull-request/blob/fe61cf72ef9924a9a17e07f183068da1a0b49f06/README.md#action-inputs>
