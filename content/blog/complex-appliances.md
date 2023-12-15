@@ -158,7 +158,7 @@ potential headache.
 
 We're at the end of a long year of remodeling. There are lot of stories I could
 tell, but I feel like it's worth a mention to how painless it is to live without
-a garage disposal. Another thing in my life I don't have to worry about.
+a garbage disposal. Another thing in my life I don't have to worry about.
 
 Old-school top load washing machine has been serving us well for the most part
 (Maytag MVWP575GW). The shift actuator assembly did go bad once. It was about
