@@ -4,7 +4,7 @@ description = "A rant about complex appliances."
 date = 2023-12-14
 
 [taxonomies]
-categories = ["Tech"]
+categories = ["Lifestyle"]
 tags = ["rant", "kiss"]
 
 [extra]
