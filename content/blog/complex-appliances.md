@@ -106,8 +106,38 @@ died, but I never cared to replace it. Fans are expensive!
 Recently, it stopped working again. With the power of YouTube and a multi-meter
 I was able to test the capacitor on the relay was good, but the relay was bad.
 Replaced the relay, but the compressor still is not starting. Tested that it is
-getting 120VAC. And at the limit of my refrigerator repair skills, we decided to
-give away the GE refrigerator.
+getting 120VAC.
+
+Here's my notes from my before replacing the relay:
+
+```
+- Note taken on [2023-12-05 Tue 20:09] \\
+  WR07X10131 it was the relay that plugs into the compressor. It rattles when
+  shaken, and it doesn't have continuity between the two main pins.
+
+  | Fault Code Definition                              | code | count | days ago |
+  |----------------------------------------------------+------+-------+----------|
+  | Cold Water Cup Switch input missing                |  709 |    14 |        2 |
+  | Condenser Fan cannot reach target RPM              |  105 |     2 |        0 |
+  | FF Temp Exceeded 75°F                              |  303 |     1 |        0 |
+  | FZ Temp Exceeded 72.5°                             |  304 |     1 |        1 |
+  | Condenser Fan cannot reach target RPM              |  105 |     2 |        0 |
+  | N/A ????                                           |  800 |    63 |        0 |
+  | 5 consecutive FF abnormal defrosts.                |  203 |   244 |        1 |
+  | N/A ????                                           |  803 |   204 |        0 |
+  | N/A ????                                           |  600 |     2 |       13 |
+  | Deli Pan Fan Feedback Missing when fan is running. |  112 |   120 |        0 |
+  | FF Defrost Heater on for max time.                 |  201 |   217 |        0 |
+```
+
+Note the `Condenser Fan cannot reach target RPM` despite it being recently
+cleaned out with an air compressor and replaced on `2021-06-05`, the $74 fan can't
+reach RPM? It was working and has nothing to do with the compressor not running,
+but it's hard to justify spending more money to fix this thing with the non-stop
+fan issues.
+
+At the limit of my refrigerator repair skills and wits' end, we decided to give
+away the GE refrigerator.
 
 # Keep it simple, stupid!
 
