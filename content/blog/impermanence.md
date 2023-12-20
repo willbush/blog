@@ -89,7 +89,10 @@ CD/ISO](https://nixos.wiki/wiki/Creating_a_NixOS_live_CD):
 
 
 {% note(header="Note") %}
-Changing`squashfsCompression` is not required, but it speeds up the build dramatically (see the wiki link above).
+
+Changing`squashfsCompression` is not required, but it speeds up the build
+dramatically for a modest trade-off in space.
+
 {% end %}
 
 Then build the `iso.nix` with:
@@ -109,36 +112,44 @@ to get a sense of how the live CD is configured.
 
 I also made a flake based example on
 [GitHub](https://github.com/willbush/ex-nixos-live-iso) which, in addition to
-the above, also brings in home-manager to add some nice-to-haves such as:
+the above, also brings in
+[home-manager](https://github.com/nix-community/home-manager) to add some
+nice-to-haves such as:
 
 - ZSH configured with completion and auto suggestions
 - [Alacritty](https://github.com/alacritty/alacritty) with [starship prompt](https://starship.rs/)
 - [fzf](https://github.com/junegunn/fzf) with ZSH integration (Ctrl + R etc.)
 - And more system packages
 
-# Trying it out in a VM
+# Fire up the VM
 
-I decided to try it out in a VM first. I'm using
-[virt-manager](https://virt-manager.org/) as the front-end for libvirt. If
-you're on NixOS see: <https://nixos.wiki/wiki/Virt-manager>.
+I'm using [virt-manager](https://virt-manager.org/) as the front-end for
+libvirt. If you're on NixOS see: <https://nixos.wiki/wiki/Virt-manager>.
 
-Get the [NixOS ISO](https://nixos.org/download.html#nixos-iso) and `sudo mv` it
-into `/var/lib/libvirt/images/` which is the default directory it looks for
-images. I always end up having permission issues otherwise.
+Using the custom ISO from the previous section or [an official
+one](https://nixos.org/download.html#nixos-iso), `sudo mv` it into
+`/var/lib/libvirt/images/` which is the default directory it looks for images. I
+always end up having permission issues otherwise.
 
-1. Open virt-manager *->* Select File *->* New virtual machine *->* Forward.
+1. Open virt-manager **⇒** Select File **⇒** New virtual machine **>** Forward.
 
-2. Choose ISO *->* Forward (it should auto-detect that it's NixOS).
+2. Choose ISO **⇒** Forward (it should auto-detect that it's NixOS).
 
-3. Choose Memory and CPU amount (I personally use 25% - 50% of what I have available) *->* Forward.
+3. Choose Memory and CPU amount (I personally use 25% - 50% of what I have available) **⇒** Forward.
 
-4. Choose available disk size *->* Forward.
+4. Choose available disk size **⇒** Forward.
 
-5. Check the `Customize configuration before install` *->* Finish.
+5. Check the `Customize configuration before install` **⇒** Finish.
 
-6. In the Overview section change the Firmware from BIOS to UEFI *->* Apply
+6. In the Overview section change the Firmware from BIOS to UEFI **⇒** Apply
 
-7. Begin Installation *->* Once booted into the ISO the first thing I do is go to View *->* Scale Display Always.
+7. Begin Installation
+
+Once booted into the ISO the first thing I do is right click on the desktop and
+`Configure Display Settings` to change to a higher resolution.
+
+Also consider, View **⇒** Scale Display Always, from the virt-manager window
+running the VM.
 
 # Partitioning and formatting
 
