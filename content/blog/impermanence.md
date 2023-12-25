@@ -15,7 +15,7 @@ toc = true
 Ever since reading Graham Christensen's blog post, [Erase your
 darlings](https://grahamc.com/blog/erase-your-darlings), I've been intrigued by
 the idea of opt-in state persistence. The concept has become known as
-impermanence[^1] [^2], but I like to think of it as:
+impermanence<cite>[^1]</cite> <cite>[^2]</cite>, but I like to think of it as:
 
 >I say we take off and nuke the entire site from orbit. [It’s the only way to be sure.](https://www.youtube.com/watch?v=tyyoaBa7DaE)
 
@@ -35,7 +35,7 @@ systemd-xdg-autostart-generator[2375]: Exec binary 'teams' does not exist: No su
 systemd-xdg-autostart-generator[2375]: /home/will/.config/autostart/teams.desktop: not generating unit, error parsing Exec= line: No such file or directory
 ```
 
-A `~/.config/autostart/teams.desktop` was left over after uninstalling teams.<cite>[^1]</cite>
+A `~/.config/autostart/teams.desktop` was left over after uninstalling teams.<cite>[^3]</cite>
 
 # The plan
 
@@ -44,8 +44,8 @@ A `~/.config/autostart/teams.desktop` was left over after uninstalling teams.<ci
 - assume UEFI system (no instructions for legacy BIOS)
 - tmpfs as root
 - Partition with optimal alignment
-- EXT4 for persistence <cite>[^2]</cite>
-- With and without swap <cite>[^3]</cite>
+- EXT4 for persistence <cite>[^4]</cite>
+- With and without swap <cite>[^5]</cite>
 
 Getting stuck in the planning stage is easy to do because of so many
 opportunities for decision paralysis.
@@ -79,7 +79,6 @@ CD/ISO](https://nixos.wiki/wiki/Creating_a_NixOS_live_CD):
   isoImage.squashfsCompression = "gzip -Xcompression-level 1";
 }
 ```
-
 
 {% note(header="Note") %}
 
@@ -115,12 +114,12 @@ nice-to-haves such as:
 
 - [fzf](https://github.com/junegunn/fzf) with ZSH integration (Ctrl + R etc.)
 
-- [neovim](https://neovim.io/) configured with my custom keybindings made for
-  Colemak-DH. I'm actually an Emacs user (with evil-mode), and I ought to try
-  work on making my config less coupled to my
-  [system](https://github.com/willbush/system).
+- [neovim](https://neovim.io/) with a minimal config for my custom keybindings
+  made for [Colemak-DH](https://colemakmods.github.io/mod-dh/). I'm actually an
+  Emacs user (with evil-mode), but that's overkill for this situation.
 
-- And more system packages like `tree`, `ripgrep`, and `mkpasswd`.
+- xclip for clipboard support in neovim, and other packages I could have
+  installed on the fly with nix-env.
 
 # KVM management tool
 
@@ -181,10 +180,14 @@ Open a parted REPL: `sudo parted /dev/vda`
 ## Finding optimal alignment
 
 Parted is a tricky tool to use from the command line especially when it comes to
-getting optimal alignment. <cite>[^4]</cite> <cite>[^5]</cite> <cite>[^6]</cite>
+getting optimal alignment. <cite>[^6]</cite> <cite>[^7]</cite> <cite>[^8]</cite>
 
 When using `mkpart` with IEC units (e.g. MiB) or exact sectors parted will not
-search for optimal alignment.
+search for optimal alignment. The NixOS manual used to use MiB / GiB for parted,
+but [it got changed](https://github.com/NixOS/nixpkgs/issues/276000) to MB / GB
+to help avoid alignment issues (parted searches a radius around the given
+position). I prefer to have my partitions in nice clean IEC unit sizes because
+that's what most tools default to (e.g. gparted, cfdisk, lsblk, `df -h` etc.).
 
 What we need to find is the starting sector of the first partition.
 
@@ -296,7 +299,7 @@ Number  Start    End       Size      File system     Name  Flags
 (parted) q
 ```
 
-If you don't want swap [^3], then just change these lines:
+If you don't want swap [^5], then just change these lines:
 
 ```diff
 -mkpart swap linux-swap 513 8705
@@ -352,60 +355,121 @@ Number  Start    End       Size      File system     Name  Flags
 
 # Mount
 
-Here we do one of the neat tricks, we mount tmpfs instead of a partition and then we mount the partitions we just created.
+I'm going to base the following on the excellent <https://elis.nu/blog/2020/05/nixos-tmpfs-as-root/> guide.
 
 ```sh
-mount -t tmpfs none /mnt
-mkdir -p /mnt/{boot,nix,etc/nixos,var/log}
-mount /dev/vda1 /mnt/boot
-mount /dev/vda2 /mnt/nix
-mkdir -p /mnt/nix/persist/{etc/nixos,var/log}
-mount -o bind /mnt/nix/persist/etc/nixos /mnt/etc/nixos
-mount -o bind /mnt/nix/persist/var/log /mnt/var/log
-```
+# Mount your root file system as tmpfs
+sudo mount -t tmpfs none /mnt
 
-```sh
-# Mount your root file system
-mount -t tmpfs none /mnt
-
-# Create directories
-mkdir -p /mnt/{boot,nix,etc/nixos,var/log}
+# Create mount directories
+sudo mkdir -p /mnt/{boot,nix,etc/nixos,var/log}
 
 # Mount /boot and /nix
-mount $DISK-part1 /mnt/boot
-mount $DISK-part2 /mnt/nix
+sudo mount /dev/vda1 /mnt/boot
+sudo mount /dev/vda3 /mnt/nix
 
-# Create a directory for persistent directories
-mkdir -p /mnt/nix/persist/{etc/nixos,var/log}
+# Create persistent directories
+sudo mkdir -p /mnt/nix/persist/{etc/nixos,var/log}
 
 # Bind mount the persistent configuration / logs
-mount -o bind /mnt/nix/persist/etc/nixos /mnt/etc/nixos
-mount -o bind /mnt/nix/persist/var/log /mnt/var/log
+sudo mount -o bind /mnt/nix/persist/etc/nixos /mnt/etc/nixos
+sudo mount -o bind /mnt/nix/persist/var/log /mnt/var/log
 ```
 
-# Installation
+# Configure
 
+If you're using swap, enable it now. Otherwise, it won't get automatically
+configured in your `hardware-configuration.nix`:
+
+```sh
+$ sudo swapon /dev/vda2
 ```
-sudo swapon /dev/vda2
+
+Generate the initial `configuration.nix` and `hardware-configuration.nix`:
+
+```sh
+$ sudo nixos-generate-config --root /mnt
+```
+
+```sh
+$ sudo -E nvim /mnt/etc/nixos/hardware-configuration.nix
+```
+
+Per Elis's blog post we need to set some options on the tmpfs root in the
+`hardware-configuration.nix`, so open it for editing (e.g. `sudo -E nvim
+/mnt/etc/nixos/hardware-configuration.nix`):
+
+>The most important bit is the `mode`, otherwise certain software (such as
+>openssh) won't be happy with the permissions of the file system.
+
+>The `size` is something you can adjust depending on how much garbage you are
+>willing to store in ram until you run out of space on your root. 2G is usually
+>big enough for most of my systems.
+
+```nix
+{
+  #...
+  fileSystems."/" =
+    { device = "none";
+      fsType = "tmpfs";
+      options = [ "defaults" "size=2G" "mode=755" ];
+    };
+  #...
+}
+```
+
+Next edit `configuration.nix` to your liking, but the password should not be mutable.
+
+Generate a hashed password. The following is an example:
+
+```sh
+$ nix-shell --run 'mkpasswd -m SHA-512 -s' -p mkpasswd
+Password: tester
+$6$f0TGnesOvBnjVcm0$z5a3cDiXJgZ8VtZi5w5o3knGG3YrFD7kp50oEWepWOCIwsbb8lSXx7U8k81hHWvYhdTm48zs9gfs.g3YwrnVq/
+```
+
+Edit `configuration.nix` to disable `mutableUsers` and paste in your password hash:
+
+```nix
+{
+  #...
+
+  users.mutableUsers = false;
+  users.users.root.initialHashedPassword =
+    "$6$f0TGnesOvBnjVcm0$z5a3cDiXJgZ8VtZi5w5o3knGG3YrFD7kp50oEWepWOCIwsbb8lSXx7U8k81hHWvYhdTm48zs9gfs.g3YwrnVq/";
+
+  #...
+}
+```
+
+{% important(header="Important") %}
+
+Elis, [in his post](https://elis.nu/blog/2020/05/nixos-tmpfs-as-root/), points
+not to use the options `password` or `hashedPassword` for users because they don't work.
+
+{% end %}
+
+```sh
+sudo nixos-install --no-root-passwd
 ```
 
 ---
-
 [^1] <https://nixos.wiki/wiki/Impermanence>
 
 [^2] <https://github.com/nix-community/impermanence>
 
 [^3] Why this breaks the graphical environment I still don't know. Perhaps I need to disable `xdg.autostart.enable` which defaults to true?
 
-[^3] I spent way too much time considering if I want to switch away from EXT4.
+[^4] I spent way too much time considering if I want to switch away from EXT4.
 After considering features and performance of file systems such as Btrfs, ZFS,
 f2fs, XFS, bcachefs, I decided to stick with EXT4 for my workstation. Though I
 plan to revisit this topic again in the future.
 
-[^4] https://wiki.archlinux.org/title/Parted#Alignment
+[^5] This is always a controversial topic. See [an argument in favor of swap](https://chrisdown.name/2018/01/02/in-defence-of-swap.html).
 
-[^5] https://blog.hqcodeshop.fi/archives/273-GNU-Parted-Solving-the-dreaded-The-resulting-partition-is-not-properly-aligned-for-best-performance.html
+[^6] <https://wiki.archlinux.org/title/Parted#Alignment>
 
-[^6] https://unix.stackexchange.com/questions/38164/create-partition-aligned-using-parted/401118#401118
+[^7] <https://blog.hqcodeshop.fi/archives/273-GNU-Parted-Solving-the-dreaded-The-resulting-partition-is-not-properly-aligned-for-best-performance.html>
 
-[^7] This is always a controversial topic. See [an argument in favor of swap](https://chrisdown.name/2018/01/02/in-defence-of-swap.html).
+[^8] <https://unix.stackexchange.com/questions/38164/create-partition-aligned-using-parted/401118#401118>
+
