@@ -15,7 +15,7 @@ toc = true
 Ever since reading Graham Christensen's blog post, [Erase your
 darlings](https://grahamc.com/blog/erase-your-darlings), I've been intrigued by
 the idea of opt-in state persistence. The concept has become known as
-impermanence<cite>[^1]</cite> <cite>[^2]</cite>, but I like to think of it as:
+impermanence[^1] [^2], but I like to think of it as:
 
 >I say we take off and nuke the entire site from orbit. [It’s the only way to be sure.](https://www.youtube.com/watch?v=tyyoaBa7DaE)
 
@@ -47,7 +47,7 @@ systemd-xdg-autostart-generator[2375]: /home/will/.config/autostart/teams.deskto
 ```
 
 A `~/.config/autostart/teams.desktop` was left over after uninstalling
-teams<cite>[^3]</cite>. Also, crap like this trying to bootstrap autostart on
+teams[^3]. Also, crap like this trying to bootstrap autostart on
 its own is exactly the sort of thing I want to nuke from orbit.
 
 # The plan
@@ -57,8 +57,8 @@ its own is exactly the sort of thing I want to nuke from orbit.
 - assume UEFI system (no instructions for legacy BIOS)
 - tmpfs as root
 - Partition with optimal alignment
-- EXT4 for persistence <cite>[^4]</cite>
-- With or without swap <cite>[^5]</cite>
+- EXT4 for persistence [^4]
+- With or without swap [^5]
 
 This post is going to be a walk-through of how to try out impermanence with NixOS in a VM.
 
@@ -200,7 +200,7 @@ Open a parted REPL: `sudo parted /dev/vda`
 ## Finding optimal alignment
 
 Parted is a tricky tool to use from the command line especially when it comes to
-getting optimal alignment. <cite>[^6]</cite> <cite>[^7]</cite> <cite>[^8]</cite>
+getting optimal alignment. [^6] [^7] [^8]
 
 When using `mkpart` with IEC units (e.g. MiB) or exact sectors parted will not
 search for optimal alignment. The NixOS manual used to use MiB / GiB for parted,
@@ -475,13 +475,15 @@ sudo nixos-install --no-root-passwd
 ```
 
 ---
-[^1] <https://nixos.wiki/wiki/Impermanence>
 
-[^2] <https://github.com/nix-community/impermanence>
+[^1]: <https://nixos.wiki/wiki/Impermanence>
 
-[^3] Why this breaks the graphical environment I still don't know. Perhaps I need to disable `xdg.autostart.enable` which defaults to true?
+[^2]: <https://github.com/nix-community/impermanence>
 
-[^4] I spent way too much time considering whether I wanted to switch away from
+[^3]: Why this breaks the graphical environment I still don't know. Perhaps I
+    need to disable `xdg.autostart.enable` which defaults to true?
+
+[^4]: I spent way too much time considering whether I wanted to switch away from
 EXT4. After considering the features and performance of file systems such as:
 
 - Btrfs
@@ -493,15 +495,15 @@ EXT4. After considering the features and performance of file systems such as:
 I decided to stick with EXT4 for my workstation. Though I plan to revisit this
 topic again in the future.
 
-[^5] This is always a controversial topic. And I can't blame either position
+[^5]: This is always a controversial topic. And I can't blame either position
 because I have yet to find any argument with experiments to back up claims.
 Here's [an argument in favor of
 swap](https://chrisdown.name/2018/01/02/in-defence-of-swap.html) which I keep
 running across.
 
-[^6] <https://wiki.archlinux.org/title/Parted#Alignment>
+[^6]: <https://wiki.archlinux.org/title/Parted#Alignment>
 
-[^7] <https://blog.hqcodeshop.fi/archives/273-GNU-Parted-Solving-the-dreaded-The-resulting-partition-is-not-properly-aligned-for-best-performance.html>
+[^7]: <https://blog.hqcodeshop.fi/archives/273-GNU-Parted-Solving-the-dreaded-The-resulting-partition-is-not-properly-aligned-for-best-performance.html>
 
-[^8] <https://unix.stackexchange.com/questions/38164/create-partition-aligned-using-parted/401118#401118>
+[^8]: <https://unix.stackexchange.com/questions/38164/create-partition-aligned-using-parted/401118#401118>
 

@@ -159,7 +159,7 @@ jobs:
 >or on: pull_request workflow then you cannot use the default GITHUB_TOKEN. See
 >the
 >[documentation](https://github.com/peter-evans/create-pull-request/blob/fe61cf72ef9924a9a17e07f183068da1a0b49f06/docs/concepts-guidelines.md#triggering-further-workflow-runs)
->here for workarounds. — <cite>[^1]</cite>
+>here for workarounds. — [^1]
 
 # Run GitHub action locally
 

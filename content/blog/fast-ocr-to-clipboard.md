@@ -54,7 +54,7 @@ Note that `tesseract` has a lot of options, and you can specify the languages.
 >
 >Flameshot knows nothing of OCR, tesseract has no gui and doesn't need it.
 >
-> Do one thing and do it well. — <cite>u/Dee_Jiensai [^1]</cite>
+> Do one thing and do it well. — u/Dee_Jiensai [^1]
 
 # Flameshot Alternatives
 
