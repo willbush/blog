@@ -2,6 +2,7 @@
 title = "Goodbye Non-KISS Appliances"
 description = "A rant about complex appliances."
 date = 2023-12-14
+draft = false
 
 [taxonomies]
 categories = ["Lifestyle"]
@@ -9,6 +10,10 @@ tags = ["rant", "kiss"]
 
 [extra]
 toc = true
+comment = true
+copy = false
+math = false
+mermaid = false
 +++
 
 Yesterday, we gave away our ~6-year-old GE French-door refrigerator after a

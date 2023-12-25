@@ -1,7 +1,7 @@
 +++
 title = "Fast OCR to clipboard"
-description = "An example of a GUI following Unix Philosophy"
 date = 2023-01-21
+draft = false
 
 [taxonomies]
 categories = ["Tech"]
@@ -9,7 +9,10 @@ tags = ["tools", "linux"]
 
 [extra]
 toc = true
-cc_license = true
+comment = true
+copy = true
+math = false
+mermaid = false
 +++
 
 # Just give me the text

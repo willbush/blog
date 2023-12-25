@@ -1,6 +1,6 @@
 +++
 title = "Synology NAS Backups with Minimal Bus Factor"
-description = "Synology NAS Backups with Minimal Bus Factor and Maximum Complexity"
+draft = false
 date = 2023-03-27
 
 [taxonomies]
@@ -9,7 +9,10 @@ tags = ["tools", "linux"]
 
 [extra]
 toc = true
-cc_license = true
+comment = true
+copy = true
+math = false
+mermaid = false
 +++
 
 If you're wanting to backup your Synology NAS, you probably just want to use one

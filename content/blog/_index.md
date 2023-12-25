@@ -9,5 +9,4 @@ generate_feed = true
 
 [extra]
 lang = 'en'
-show_post_num = 10
 +++

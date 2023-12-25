@@ -1,6 +1,5 @@
 +++
 title = "Try impermanence with NixOS on a VM"
-description = ""
 date = 2023-12-25
 draft = true
 
@@ -10,6 +9,10 @@ tags = ["nixos", "linux", "impermanence"]
 
 [extra]
 toc = true
+comment = true
+copy = true
+math = false
+mermaid = false
 +++
 
 Ever since reading Graham Christensen's blog post, [Erase your

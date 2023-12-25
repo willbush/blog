@@ -1,6 +1,6 @@
 +++
 title = "Monorepo NuGet Package Updates with GitHub Actions"
-description = "Learn how to automate NuGet package updates in a monorepo by using GitHub Actions to run a script that updates all packages and opens a single pull request."
+draft = false
 date = 2023-06-13
 
 [taxonomies]
@@ -9,7 +9,10 @@ tags = ["dotnet", "csharp", "bash", "github actions"]
 
 [extra]
 toc = true
-cc_license = true
+comment = true
+copy = true
+math = false
+mermaid = false
 +++
 
 {% important(header="Important") %}
