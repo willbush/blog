@@ -21,13 +21,24 @@ impermanence<cite>[^1]</cite> <cite>[^2]</cite>, but I like to think of it as:
 
 <!-- more -->
 
-Before my last reinstall I had actually forgotten what would be in the `~/`
-directory after a fresh install. Turns out nothing. The gradual accumulation of
-cruft is annoying, and clutter has a negative effect on my state of mind. It's
-distracting.
+So what is impermanence? To quote the [nix-community impermanence
+readme](https://github.com/nix-community/impermanence):
 
-Left over cruft can breaks things. For example, the other day I couldn't login
-to the graphical environment. I had to switch to a TTY to find out why with
+>Lets you choose what files and directories you want to keep between reboots - the rest are thrown away.
+>
+>Why would you want this?
+>
+>- It keeps your system clean by default.
+>- It forces you to declare settings you want to keep.
+>- It lets you experiment with new software without cluttering up your system.
+
+Before my last reformat, I had actually forgotten what would be in the `~/`
+directory after freshly installing NixOS with no desktop environment. Turns out
+nothing. The gradual accumulation of cruft is annoying, and clutter has a
+negative effect on my state of mind. It's distracting.
+
+Leftover cruft can break things. For example, the other day I couldn't log in to
+the graphical environment. I had to switch to a TTY to find out why using
 `journalctl`:
 
 ```
@@ -35,7 +46,9 @@ systemd-xdg-autostart-generator[2375]: Exec binary 'teams' does not exist: No su
 systemd-xdg-autostart-generator[2375]: /home/will/.config/autostart/teams.desktop: not generating unit, error parsing Exec= line: No such file or directory
 ```
 
-A `~/.config/autostart/teams.desktop` was left over after uninstalling teams.<cite>[^3]</cite>
+A `~/.config/autostart/teams.desktop` was left over after uninstalling
+teams<cite>[^3]</cite>. Also, crap like this trying to bootstrap autostart on
+its own is exactly the sort of thing I want to nuke from orbit.
 
 # The plan
 
@@ -45,19 +58,23 @@ A `~/.config/autostart/teams.desktop` was left over after uninstalling teams.<ci
 - tmpfs as root
 - Partition with optimal alignment
 - EXT4 for persistence <cite>[^4]</cite>
-- With and without swap <cite>[^5]</cite>
+- With or without swap <cite>[^5]</cite>
 
-Getting stuck in the planning stage is easy to do because of so many
-opportunities for decision paralysis.
+This post is going to be a walk-through of how to try out impermanence with NixOS in a VM.
+
+I personally try this sort of thing in a VM first. I did so when migrating to
+NixOS. And again, when I rewrote my config for nix
+[flakes](https://nixos.wiki/wiki/Flakes.). This time, I want to document it
+better, and hopefully make it easier for others to try it out too.
 
 I'm largely using <https://elis.nu/blog/2020/05/nixos-tmpfs-as-root/> as a guide
 to use `tmpfs` (i.e. RAM) as root. I find the simplicity of its setup appealing.
-I use a UPS with my system, so I want to give this a try before trying the ZFS /
-Btrfs snapshots approach.
+However, power outages create a risk of data loss. I use a UPS with my system,
+and want to give this a try before trying the ZFS / Btrfs snapshot approach.
 
 # Creating a custom NixOS live ISO
 
-It would be nice to be able copy / paste between the host and the VM. If that's
+It's nice to be able to copy and paste between the host and the VM. If that's
 not something you care about, you can skip this section.
 
 Fortunately, it's easy [to create a custom live
@@ -97,14 +114,14 @@ nix-build '<nixpkgs/nixos>' \
 
 The resulting ISO will be in `./result/iso/`.
 
-In `iso.nix` I uses the graphical installer because X11 is needed for spice to
+In `iso.nix` I use the graphical installer because X11 is needed for spice to
 work. Check out the [imported
 file](https://github.com/NixOS/nixpkgs/blob/f450b7ca7057b98367fc13e172d10f7dc2334db7/nixos/modules/installer/cd-dvd/installation-cd-graphical-plasma5.nix#L1)
 to get a sense of how the live CD is configured.
 
-I also made a flake based example on
-[GitHub](https://github.com/willbush/ex-nixos-live-iso) which, in addition to
-the above, also brings in
+I also made a flake based [example on
+GitHub](https://github.com/willbush/ex-nixos-live-iso) which, in addition to the
+above, also brings in
 [home-manager](https://github.com/nix-community/home-manager) to add some
 nice-to-haves such as:
 
@@ -121,6 +138,8 @@ nice-to-haves such as:
 - xclip for clipboard support in neovim, and other packages I could have
   installed on the fly with nix-env.
 
+Feel free to fork it and/or clone and modify it to your liking.
+
 # KVM management tool
 
 I'm using [virt-manager](https://virt-manager.org/) as the front-end for
@@ -132,7 +151,7 @@ to assume no one needs BIOS to simplify these instructions.
 
 For me, virt-manager uses BIOS by default, to change this:
 
-1. Open virt-manager **⇒** View **⇒** set `x86 Firmware` to UEFI **⇒** Close
+1. Open virt-manager **⇒** View **⇒** set x86 Firmware to UEFI **⇒** Close
 
 If you don't want to change the default, you can change it at VM creation time
 after selecting the disk size:
@@ -171,7 +190,8 @@ For me `lsblk` shows a disk named `vda`. Below replace `vda` with your disk.
 {% note(header="Note") %}
 
 One can wipe all the file systems on a device using: `sudo wipefs -a /dev/vda`
-which is useful to start over or prepare a device.
+which is useful to start over after a mistake or to prepare a device that
+already has file systems.
 
 {% end %}
 
@@ -265,7 +285,7 @@ align-check optimal 3
 q
 ```
 
-Here are the commands with repl output:
+Here are the same commands with repl output:
 
 ```sh
 $ sudo parted /dev/vda
@@ -355,7 +375,8 @@ Number  Start    End       Size      File system     Name  Flags
 
 # Mount
 
-I'm going to base the following on the excellent <https://elis.nu/blog/2020/05/nixos-tmpfs-as-root/> guide.
+I'm going to base the following on the excellent
+<https://elis.nu/blog/2020/05/nixos-tmpfs-as-root/> guide.
 
 ```sh
 # Mount your root file system as tmpfs
@@ -395,13 +416,13 @@ $ sudo nixos-generate-config --root /mnt
 $ sudo -E nvim /mnt/etc/nixos/hardware-configuration.nix
 ```
 
-Per Elis's blog post we need to set some options on the tmpfs root in the
+Per Elis's blog post, we need to set some options on the tmpfs root in the
 `hardware-configuration.nix`, so open it for editing (e.g. `sudo -E nvim
 /mnt/etc/nixos/hardware-configuration.nix`):
 
 >The most important bit is the `mode`, otherwise certain software (such as
 >openssh) won't be happy with the permissions of the file system.
-
+>
 >The `size` is something you can adjust depending on how much garbage you are
 >willing to store in ram until you run out of space on your root. 2G is usually
 >big enough for most of my systems.
@@ -424,8 +445,8 @@ Generate a hashed password. The following is an example:
 
 ```sh
 $ nix-shell --run 'mkpasswd -m SHA-512 -s' -p mkpasswd
-Password: tester
-$6$f0TGnesOvBnjVcm0$z5a3cDiXJgZ8VtZi5w5o3knGG3YrFD7kp50oEWepWOCIwsbb8lSXx7U8k81hHWvYhdTm48zs9gfs.g3YwrnVq/
+Password: your password
+<hash output>
 ```
 
 Edit `configuration.nix` to disable `mutableUsers` and paste in your password hash:
@@ -435,19 +456,19 @@ Edit `configuration.nix` to disable `mutableUsers` and paste in your password ha
   #...
 
   users.mutableUsers = false;
-  users.users.root.initialHashedPassword =
-    "$6$f0TGnesOvBnjVcm0$z5a3cDiXJgZ8VtZi5w5o3knGG3YrFD7kp50oEWepWOCIwsbb8lSXx7U8k81hHWvYhdTm48zs9gfs.g3YwrnVq/";
-
+  users.users.root.initialHashedPassword = "<hash output>";
   #...
 }
 ```
 
 {% important(header="Important") %}
 
-Elis, [in his post](https://elis.nu/blog/2020/05/nixos-tmpfs-as-root/), points
-not to use the options `password` or `hashedPassword` for users because they don't work.
+Be sure to use `initialHashedPassword` instead of `hashedPassword` because the
+latter doesn't work for this setup.
 
 {% end %}
+
+# Install
 
 ```sh
 sudo nixos-install --no-root-passwd
@@ -460,12 +481,23 @@ sudo nixos-install --no-root-passwd
 
 [^3] Why this breaks the graphical environment I still don't know. Perhaps I need to disable `xdg.autostart.enable` which defaults to true?
 
-[^4] I spent way too much time considering if I want to switch away from EXT4.
-After considering features and performance of file systems such as Btrfs, ZFS,
-f2fs, XFS, bcachefs, I decided to stick with EXT4 for my workstation. Though I
-plan to revisit this topic again in the future.
+[^4] I spent way too much time considering whether I wanted to switch away from
+EXT4. After considering the features and performance of file systems such as:
 
-[^5] This is always a controversial topic. See [an argument in favor of swap](https://chrisdown.name/2018/01/02/in-defence-of-swap.html).
+- Btrfs
+- ZFS
+- f2fs
+- XFS
+- bcachefs
+
+I decided to stick with EXT4 for my workstation. Though I plan to revisit this
+topic again in the future.
+
+[^5] This is always a controversial topic. And I can't blame either position
+because I have yet to find any argument with experiments to back up claims.
+Here's [an argument in favor of
+swap](https://chrisdown.name/2018/01/02/in-defence-of-swap.html) which I keep
+running across.
 
 [^6] <https://wiki.archlinux.org/title/Parted#Alignment>
 
