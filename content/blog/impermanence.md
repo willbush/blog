@@ -1,7 +1,7 @@
 +++
 title = "Try impermanence with NixOS on a VM"
 date = 2023-12-25
-draft = false
+draft = true
 
 [taxonomies]
 categories = ["Tech"]
