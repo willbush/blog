@@ -187,4 +187,4 @@ dotnet tool install -g dotnet-outdated`
 
 ---
 
-[^1]: <https://github.com/peter-evans/create-pull-request/blob/fe61cf72ef9924a9a17e07f183068da1a0b49f06/README.md#action-inputs>
+[^1]: [action-inputs](https://github.com/peter-evans/create-pull-request/blob/fe61cf72ef9924a9a17e07f183068da1a0b49f06/README.md#action-inputs)
