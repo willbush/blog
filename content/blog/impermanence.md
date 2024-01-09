@@ -1,6 +1,6 @@
 +++
 title = "Try impermanence with NixOS on a VM"
-date = 2023-12-25
+date = 2024-01-08
 draft = true
 
 [taxonomies]
@@ -62,8 +62,12 @@ its own is exactly the sort of thing I want to nuke from orbit.
 - Partition with optimal alignment
 - EXT4 for persistence [^4]
 - With or without swap [^5]
+- Install using opinionated or minimal configuration
 
-This post is going to be a walk-through of how to try out impermanence with NixOS in a VM.
+This post is going to be a walk-through of how to try out impermanence with
+NixOS in a VM. I imagine the audience for this post is people who are already
+familiar with NixOS, but I'll try to keep in mind those crazy enough to try
+NixOS and impermanence for the first time.
 
 I personally try this sort of thing in a VM first. I did so when migrating to
 NixOS. And again, when I rewrote my config for nix
@@ -77,11 +81,12 @@ and want to give this a try before trying the ZFS / Btrfs snapshot approach.
 
 # Creating a custom NixOS live ISO
 
-It's nice to be able to copy and paste between the host and the VM. If that's
-not something you care about, you can skip this section.
+It's nice to be able to copy and paste between the host and the VM, and I wrote
+the code blocks below with that in mind.
 
-Fortunately, it's easy [to create a custom live
-CD/ISO](https://nixos.wiki/wiki/Creating_a_NixOS_live_CD):
+Fortunately, it's easy [to create a custom live CD/ISO](https://nixos.wiki/wiki/Creating_a_NixOS_live_CD):
+
+If that's something you rather not mess with, then skip this section.
 
 `iso.nix`:
 
@@ -116,6 +121,14 @@ nix-build '<nixpkgs/nixos>' \
 ```
 
 The resulting ISO will be in `./result/iso/`.
+
+{% note(header="Note") %}
+
+If you don't have Nix installed, I recommend using the Determinate Systems [Nix
+installer](https://zero-to-nix.com/concepts/nix-installer) (reasons given on the
+website):
+
+{% end %}
 
 In `iso.nix` I use the graphical installer because X11 is needed for spice to
 work. Check out the [imported
@@ -190,63 +203,49 @@ running the VM.
 
 For me `lsblk` shows a disk named `vda`. Below replace `vda` with your disk.
 
-{% note(header="Note") %}
+Setup a variable for the disk which will be used in the following commands:
 
-One can wipe all the file systems on a device using: `sudo wipefs -a /dev/vda`
-which is useful to start over after a mistake or to prepare a device that
-already has file systems.
-
-{% end %}
-
-Open a parted REPL: `sudo parted /dev/vda`
+```sh
+export DISK=/dev/vda
+```
 
 ## Finding optimal alignment
 
-Parted is a tricky tool to use from the command line especially when it comes to
-getting optimal alignment. [^6] [^7] [^8]
+{% note(header="Note") %}
 
-When using `mkpart` with IEC units (e.g. MiB) or exact sectors parted will not
-search for optimal alignment. The NixOS manual used to use MiB / GiB for parted,
-but [it got changed](https://github.com/NixOS/nixpkgs/issues/276000) to MB / GB
-to help avoid alignment issues (parted searches a radius around the given
-position). I prefer to have my partitions in nice clean IEC unit sizes because
-that's what most tools default to (e.g. gparted, cfdisk, lsblk, `df -h` etc.).
+The `TLDR` of this section is that I'm going to use `1MiB` (sector 2048) as the
+starting sector, and that will probably work for you too. So you can either skip
+this section and come back if you have alignment issues or read on to find your
+optimal alignment.
+
+{% end %}
+
+I like to have my partitions in nice clean power of 2 IEC unit sizes (e.g. MiB)
+because that's what most tools default to (e.g. gparted, cfdisk, lsblk, `df -h`
+etc.). However, when using `mkpart` with IEC units or exact sectors parted will
+not search for optimal alignment. It basically assumes you know what you're
+doing. [^6] [^7] [^8]
+
+One simple way around this is to use percentages or MB / GB units. In fact, the
+NixOS manual used to use MiB / GiB for parted, but [it got
+changed](https://github.com/NixOS/nixpkgs/pull/200180) to MB / GB to help avoid
+alignment issues (parted searches a radius around the given position).
 
 What we need to find is the starting sector of the first partition.
 
 A simple trick to do this with `parted` is to:
 
 ```sh
-# Since precentages are used,
-# parted will automatically find the optimal alignment.
-mkpart primary 0% 100%
-# Print out the results showing units in sectors
-unit s print
-# Print out the results showing units in MiB
-unit MiB print
-# Remove the temporary partition
-rm 1
+sudo parted $DISK --script \
+  mklabel gpt \
+  mkpart primary 0% 100% \
+  unit MiB print \
+  rm 1
 ```
 
-For example:
+This will print out something like this the following. Note the `Start`.
 
-```sh
-$ sudo parted /dev/vda
-GNU Parted 3.6
-Using /dev/vda
-Welcome to GNU Parted! Type 'help' to view a list of commands.
-(parted) mkpart primary 0% 100%
-(parted) unit s print
-Model: Virtio Block Device (virtblk)
-Disk /dev/vda: 83886080s
-Sector size (logical/physical): 512B/512B
-Partition Table: gpt
-Disk Flags:
-
-Number  Start  End        Size       File system  Name     Flags
- 1      2048s  83884031s  83881984s               primary
-
-(parted) unit MiB print
+```
 Model: Virtio Block Device (virtblk)
 Disk /dev/vda: 40960MiB
 Sector size (logical/physical): 512B/512B
@@ -255,15 +254,28 @@ Disk Flags:
 
 Number  Start    End       Size      File system  Name     Flags
  1      1.00MiB  40959MiB  40958MiB               primary
-(parted) rm 1
 ```
 
-So I will using `1MiB` (which is the same as `2048s`) as the starting sector for
-the first partition.
+Now wipe the device to start over:
+
+```sh
+sudo wipefs -a $DISK
+```
 
 ## Create partitions
 
-First lets look at the annotated commands:
+```sh
+sudo parted $DISK --script \
+  unit MiB \
+  mklabel gpt \
+  mkpart ESP fat32 1 513 \
+  set 1 boot on \
+  mkpart swap linux-swap 513 8705 \
+  mkpart nix 8705 100% \
+  print
+```
+
+Here are the annotated `parted` commands:
 
 ```sh
 # default units for `print` and `mkpart` commands
@@ -281,45 +293,6 @@ mkpart swap linux-swap 513 8705
 mkpart nix 8705 100%
 # see the results
 print
-# Check alignment on each partition
-align-check optimal 1
-align-check optimal 2
-align-check optimal 3
-q
-```
-
-Here are the same commands with repl output:
-
-```sh
-$ sudo parted /dev/vda
-GNU Parted 3.6
-Using /dev/vda
-Welcome to GNU Parted! Type 'help' to view a list of commands.
-(parted) unit MiB
-(parted) mklabel gpt
-(parted) mkpart ESP fat32 1 513
-(parted) set 1 boot on
-(parted) mkpart swap linux-swap 513 8705
-(parted) mkpart nix 8705 100%
-(parted) print
-Model: Virtio Block Device (virtblk)
-Disk /dev/vda: 30720MiB
-Sector size (logical/physical): 512B/512B
-Partition Table: gpt
-Disk Flags:
-
-Number  Start    End       Size      File system     Name  Flags
- 1      1.00MiB  513MiB    512MiB    fat32           ESP   boot, esp
- 2      513MiB   8705MiB   8192MiB   linux-swap(v1)  swap  swap
- 3      8705MiB  30719MiB  22014MiB                  nix
-
-(parted) align-check optimal 1
-1 aligned
-(parted) align-check optimal 2
-2 aligned
-(parted) align-check optimal 3
-3 aligned
-(parted) q
 ```
 
 If you don't want swap [^5], then just change these lines:
@@ -343,27 +316,45 @@ vda    253:0    0   30G  0 disk
 └─vda3 253:3    0 21.5G  0 part
 ```
 
+Check alignment:
+
+```sh
+sudo parted $DISK -- align-check optimal 1
+```
+
+Repeat the above command with `2` and `3` for the second and third partitions.
+
 # Format
 
 ```sh
-$ sudo mkfs.fat -F 32 -n boot /dev/vda1
-$ sudo mkswap -L swap /dev/vda2
-$ sudo mkfs.ext4 -L nixos /dev/vda3
+sudo mkfs.fat -F 32 -n boot ${DISK}1
+```
+
+```sh
+sudo mkswap -L swap ${DISK}2
+```
+
+```sh
+sudo mkfs.ext4 -L nixos ${DISK}3
 ```
 
 For no swap:
 
 ```diff
--sudo mkswap -L swap /dev/vda2
--sudo mkfs.ext4 -L nixos /dev/vda3
-+sudo mkfs.ext4 -L nixos /dev/vda2
+-sudo mkswap -L swap ${DISK}2
+-sudo mkfs.ext4 -L nixos ${DISK}3
++sudo mkfs.ext4 -L nixos ${DISK}2
 ```
 
-Verify the partitions and file systems using. Here's what I get with a 40GiB
-virtual disk:
+Verify the partitions and file systems using:
 
 ```sh
-$ sudo parted /dev/vda -- unit MiB print
+sudo parted $DISK -- unit MiB print
+```
+
+Here's what I get with a 40GiB virtual disk:
+
+```
 Model: Virtio Block Device (virtblk)
 Disk /dev/vda: 40960MiB
 Sector size (logical/physical): 512B/512B
@@ -382,22 +373,33 @@ I'm going to base the following on the excellent
 <https://elis.nu/blog/2020/05/nixos-tmpfs-as-root/> guide.
 
 ```sh
+cat << EOF > ./mount.sh
+#!/usr/bin/env bash
+
+set -e
+
 # Mount your root file system as tmpfs
-sudo mount -t tmpfs none /mnt
+mount -v -t tmpfs none /mnt
 
 # Create mount directories
-sudo mkdir -p /mnt/{boot,nix,etc/nixos,var/log}
+mkdir -v -p /mnt/{boot,nix,etc/nixos,var/log}
 
 # Mount /boot and /nix
-sudo mount /dev/vda1 /mnt/boot
-sudo mount /dev/vda3 /mnt/nix
+mount -v ${DISK}1 /mnt/boot
+mount -v ${DISK}3 /mnt/nix
 
 # Create persistent directories
-sudo mkdir -p /mnt/nix/persist/{etc/nixos,var/log}
+mkdir -v -p /mnt/nix/persist/{etc/nixos,var/log}
 
 # Bind mount the persistent configuration / logs
-sudo mount -o bind /mnt/nix/persist/etc/nixos /mnt/etc/nixos
-sudo mount -o bind /mnt/nix/persist/var/log /mnt/var/log
+mount -v -o bind /mnt/nix/persist/etc/nixos /mnt/etc/nixos
+mount -v -o bind /mnt/nix/persist/var/log /mnt/var/log
+
+EOF
+```
+
+```sh
+chmod u+x ./mount.sh && sudo ./mount.sh
 ```
 
 # Configure
@@ -406,17 +408,17 @@ If you're using swap, enable it now. Otherwise, it won't get automatically
 configured in your `hardware-configuration.nix`:
 
 ```sh
-$ sudo swapon /dev/vda2
+sudo swapon ${DISK}2
 ```
 
 Generate the initial `configuration.nix` and `hardware-configuration.nix`:
 
 ```sh
-$ sudo nixos-generate-config --root /mnt
+sudo nixos-generate-config --root /mnt
 ```
 
 ```sh
-$ sudo -E nvim /mnt/etc/nixos/hardware-configuration.nix
+sudo -E nvim /mnt/etc/nixos/hardware-configuration.nix
 ```
 
 Per Elis's blog post, we need to set some options on the tmpfs root in the
@@ -509,4 +511,3 @@ running across.
 [^7]: <https://blog.hqcodeshop.fi/archives/273-GNU-Parted-Solving-the-dreaded-The-resulting-partition-is-not-properly-aligned-for-best-performance.html>
 
 [^8]: <https://unix.stackexchange.com/questions/38164/create-partition-aligned-using-parted/401118#401118>
-
