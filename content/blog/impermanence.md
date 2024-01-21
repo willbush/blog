@@ -62,17 +62,17 @@ its own is exactly the sort of thing I want to nuke from orbit.
 - Partition with optimal alignment
 - EXT4 for persistence [^4]
 - With or without swap [^5]
-- Install using opinionated or minimal configuration
+- Opinionated install using nix [flakes](https://nixos.wiki/wiki/Flakes) [^6]
 
 This post is going to be a walk-through of how to try out impermanence with
 NixOS in a VM. I imagine the audience for this post is people who are already
 familiar with NixOS, but I'll try to keep in mind those crazy enough to try
-NixOS and impermanence for the first time.
+NixOS, flakes, and impermanence for the first time.
 
 I personally try this sort of thing in a VM first. I did so when migrating to
-NixOS. And again, when I rewrote my config for nix
-[flakes](https://nixos.wiki/wiki/Flakes.). This time, I want to document it
-better, and hopefully make it easier for others to try it out too.
+NixOS. And again, when I rewrote my config for nix flakes. This time, as I'm
+migrating to impermanence, I want to document the process better. Hopefully,
+this will make it easier for others to try it out too.
 
 I'm largely using <https://elis.nu/blog/2020/05/nixos-tmpfs-as-root/> as a guide
 to use `tmpfs` (i.e. RAM) as root. I find the simplicity of its setup appealing.
@@ -81,8 +81,8 @@ and want to give this a try before trying the ZFS / Btrfs snapshot approach.
 
 # Creating a custom NixOS live ISO
 
-It's nice to be able to copy and paste between the host and the VM, and I wrote
-the code blocks below with that in mind.
+It's nice to be able to copy and paste between the host and the VM, and the
+following code blocks are written to make them easy to paste and run.
 
 Fortunately, it's easy [to create a custom live CD/ISO](https://nixos.wiki/wiki/Creating_a_NixOS_live_CD):
 
@@ -159,8 +159,9 @@ Feel free to fork it and/or clone and modify it to your liking.
 # KVM management tool
 
 I'm using [virt-manager](https://virt-manager.org/) as the front-end for
-libvirt. If you're on NixOS see: <https://nixos.wiki/wiki/Virt-manager>. I also
-experimented with <https://cockpit-project.org/>, but ran into problems.
+libvirt. If you're on NixOS see: <https://nixos.wiki/wiki/Virt-manager> for
+install instructions. I also experimented with <https://cockpit-project.org/>,
+but ran into problems.
 
 These days most computers use UEFI instead of BIOS for the firmware. I'm going
 to assume no one needs BIOS to simplify these instructions.
@@ -224,7 +225,7 @@ I like to have my partitions in nice clean power of 2 IEC unit sizes (e.g. MiB)
 because that's what most tools default to (e.g. gparted, cfdisk, lsblk, `df -h`
 etc.). However, when using `mkpart` with IEC units or exact sectors parted will
 not search for optimal alignment. It basically assumes you know what you're
-doing. [^6] [^7] [^8]
+doing. [^7] [^8] [^9]
 
 One simple way around this is to use percentages or MB / GB units. In fact, the
 NixOS manual used to use MiB / GiB for parted, but [it got
@@ -330,6 +331,10 @@ Repeat the above command with `2` and `3` for the second and third partitions.
 sudo mkfs.fat -F 32 -n boot ${DISK}1
 ```
 
+I always ignore the warning:
+
+>lowercase labels might not work properly on some systems`
+
 ```sh
 sudo mkswap -L swap ${DISK}2
 ```
@@ -395,6 +400,9 @@ mkdir -v -p /mnt/nix/persist/{etc/nixos,var/log}
 mount -v -o bind /mnt/nix/persist/etc/nixos /mnt/etc/nixos
 mount -v -o bind /mnt/nix/persist/var/log /mnt/var/log
 
+# Make config directory temporarily easier to work with
+chmod -v 777 /mnt/etc/nixos
+
 EOF
 ```
 
@@ -402,7 +410,7 @@ EOF
 chmod u+x ./mount.sh && sudo ./mount.sh
 ```
 
-# Configure
+# Configure hardware
 
 If you're using swap, enable it now. Otherwise, it won't get automatically
 configured in your `hardware-configuration.nix`:
@@ -414,16 +422,15 @@ sudo swapon ${DISK}2
 Generate the initial `configuration.nix` and `hardware-configuration.nix`:
 
 ```sh
-sudo nixos-generate-config --root /mnt
+nixos-generate-config --root /mnt && cd /mnt/etc/nixos
 ```
 
-```sh
-sudo -E nvim /mnt/etc/nixos/hardware-configuration.nix
-```
+If you see the following, just ignore it:
+
+>ERROR: Not a Btrfs filesystem: Invalid argument
 
 Per Elis's blog post, we need to set some options on the tmpfs root in the
-`hardware-configuration.nix`, so open it for editing (e.g. `sudo -E nvim
-/mnt/etc/nixos/hardware-configuration.nix`):
+`hardware-configuration.nix`:
 
 >The most important bit is the `mode`, otherwise certain software (such as
 >openssh) won't be happy with the permissions of the file system.
@@ -432,52 +439,60 @@ Per Elis's blog post, we need to set some options on the tmpfs root in the
 >willing to store in ram until you run out of space on your root. 2G is usually
 >big enough for most of my systems.
 
-```nix
+```diff
 {
   #...
   fileSystems."/" =
     { device = "none";
       fsType = "tmpfs";
-      options = [ "defaults" "size=2G" "mode=755" ];
++     options = [ "defaults" "size=2G" "mode=755" ];
     };
   #...
 }
 ```
 
-Next edit `configuration.nix` to your liking, but the password should not be mutable.
-
-Generate a hashed password. The following is an example:
+The following will add the options to the tmpfs root and format the two nix
+files using `nixpkgs-fmt`:
 
 ```sh
-$ nix-shell --run 'mkpasswd -m SHA-512 -s' -p mkpasswd
-Password: your password
-<hash output>
+sed -i '/fsType = "tmpfs";/a options = [ "defaults" "size=2G" "mode=755" ];' \
+  ./hardware-configuration.nix && \
+  nix-shell -p nixpkgs-fmt --run 'nixpkgs-fmt .'
 ```
 
-Edit `configuration.nix` to disable `mutableUsers` and paste in your password hash:
+# Configure with flakes
 
-```nix
-{
-  #...
-
-  users.mutableUsers = false;
-  users.users.root.initialHashedPassword = "<hash output>";
-  #...
-}
+```sh
+git clone https://github.com/willbush/ex-nixos-starter-config.git && \
+mv hardware-configuration.nix ./ex-nixos-starter-config && \
+cd ex-nixos-starter-config && \
+git add .
 ```
 
-{% important(header="Important") %}
+{% note(header="Note") %}
 
-Be sure to use `initialHashedPassword` instead of `hashedPassword` because the
-latter doesn't work for this setup.
+New files in a git repo must be staged at least for flake related commands to be
+aware of them. This is why `git add .` is needed so that the
+`hardware-configuration.nix` is staged.
+
+Otherwise, an error like the following will happen:
+
+error: getting status of '/mnt/nix/store/21zpkqcn55a73x9y8yy4lrrd7ja3mjvc-source/nixos/hardware-configuration.nix': No such file or directory
 
 {% end %}
 
 # Install
 
 ```sh
-sudo nixos-install --no-root-passwd
+export NIX_CONFIG="experimental-features = nix-command flakes" && \
+sudo nixos-install --flake .#blitzar --no-root-passwd
 ```
+
+```sh
+reboot
+```
+
+https://nix-community.github.io/home-manager/index.xhtml#sec-flakes-nixos-module
 
 ---
 
@@ -506,8 +521,11 @@ Here's [an argument in favor of
 swap](https://chrisdown.name/2018/01/02/in-defence-of-swap.html) which I keep
 running across.
 
-[^6]: <https://wiki.archlinux.org/title/Parted#Alignment>
+[^6]: This blog post is already taking to long. Making it "opinionated" makes it
+    easier to write.
 
-[^7]: <https://blog.hqcodeshop.fi/archives/273-GNU-Parted-Solving-the-dreaded-The-resulting-partition-is-not-properly-aligned-for-best-performance.html>
+[^7]: <https://wiki.archlinux.org/title/Parted#Alignment>
 
-[^8]: <https://unix.stackexchange.com/questions/38164/create-partition-aligned-using-parted/401118#401118>
+[^8]: <https://blog.hqcodeshop.fi/archives/273-GNU-Parted-Solving-the-dreaded-The-resulting-partition-is-not-properly-aligned-for-best-performance.html>
+
+[^9]: <https://unix.stackexchange.com/questions/38164/create-partition-aligned-using-parted/401118#401118>
