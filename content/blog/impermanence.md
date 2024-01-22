@@ -202,57 +202,15 @@ Setup a variable for the disk which will be used in the following commands:
 export DISK=/dev/vda
 ```
 
-## Finding optimal alignment
-
 {% note(header="Note") %}
 
-The `TLDR` of this section is that I'm going to use `1MiB` (sector 2048) as the
-starting sector, and that will probably work for you too. So you can either skip
-this section and come back if you have alignment issues or read on to find your
-optimal alignment.
+I'm going to use `1MiB` (sector 2048) as the starting sector for optimal
+alignment, and that will probably work for you too. However, if you run into
+alignment issues, then see the "Finding optimal alignment" section at the end of
+the blog post.
 
 {% end %}
 
-When using `parted`, a simple way around alignment issues is to use percentages
-or MB / GB units. When this is done, `parted` effectively searches a calculated
-distance around the given location to find optimal alignment. However, I like to
-have my partitions in nice clean power of 2 IEC unit sizes (e.g. MiB) because
-that's what most tools default to (e.g. `gparted`, `cfdisk`, `lsblk`, `df -h`
-etc.). The problem is when using IEC units or exact sectors, `parted` will not
-search for optimal alignment. It basically assumes you know what you're doing.
-[^7] [^8] [^9]
-
-What we need to find is the starting sector of the first partition. A simple
-trick to do this with `parted` is to:
-
-```sh
-sudo parted $DISK --script \
-  mklabel gpt \
-  mkpart primary 0% 100% \
-  unit MiB print \
-  rm 1
-```
-
-This will print out something like this the following. Note the `Start`.
-
-```
-Model: Virtio Block Device (virtblk)
-Disk /dev/vda: 40960MiB
-Sector size (logical/physical): 512B/512B
-Partition Table: gpt
-Disk Flags:
-
-Number  Start    End       Size      File system  Name     Flags
- 1      1.00MiB  40959MiB  40958MiB               primary
-```
-
-Now wipe the device to start over:
-
-```sh
-sudo wipefs -a $DISK
-```
-
-## Create partitions
 
 ```sh
 sudo parted $DISK --script \
@@ -459,9 +417,9 @@ Here's how to use my starter config:
 
 ```sh
 git clone https://github.com/willbush/ex-nixos-starter-config.git && \
-mv hardware-configuration.nix ./ex-nixos-starter-config && \
-cd ex-nixos-starter-config && \
-git add .
+  mv hardware-configuration.nix ./ex-nixos-starter-config && \
+  cd ex-nixos-starter-config && \
+  git add .
 ```
 
 {% note(header="Note") %}
@@ -506,6 +464,49 @@ This means all the `home.nix` configuration is applied when `nixos-install` is
 run (above) or in the more normal case when using `nixos-rebuild`. Otherwise, we
 would have to use standalone `home-manager` cli tool, and opt-in to persist it's
 changes.
+
+## Finding optimal alignment
+
+When using `parted`, a simple way around alignment issues is to use percentages
+or MB / GB units. When this is done, `parted` effectively searches a calculated
+distance around the given location to find optimal alignment. However, I like to
+have my partitions in nice clean power of 2 IEC unit sizes (e.g. MiB) because
+that's what most tools default to (e.g. `gparted`, `cfdisk`, `lsblk`, `df -h`
+etc.). The problem is when using IEC units or exact sectors, `parted` will not
+search for optimal alignment. It basically assumes you know what you're doing.
+[^7] [^8] [^9]
+
+What we need to find is the starting sector of the first partition. A simple
+trick to do this with `parted` is to:
+
+```sh
+sudo parted $DISK --script \
+  mklabel gpt \
+  mkpart primary 0% 100% \
+  unit MiB print \
+  rm 1
+```
+
+This will print out something like this the following. Note the `Start`.
+
+```
+Model: Virtio Block Device (virtblk)
+Disk /dev/vda: 40960MiB
+Sector size (logical/physical): 512B/512B
+Partition Table: gpt
+Disk Flags:
+
+Number  Start    End       Size      File system  Name     Flags
+ 1      1.00MiB  40959MiB  40958MiB               primary
+```
+
+Now wipe the device to start over:
+
+```sh
+sudo wipefs -a $DISK
+```
+
+Head back to the "Partitioning" section and adjust the values for your `Start`.
 
 ---
 
