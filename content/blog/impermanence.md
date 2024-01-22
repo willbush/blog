@@ -35,14 +35,8 @@ readme](https://github.com/nix-community/impermanence):
 >- It forces you to declare settings you want to keep.
 >- It lets you experiment with new software without cluttering up your system.
 
-Before my last reformat, I had actually forgotten what would be in the `~/`
-directory after freshly installing NixOS with no desktop environment. Turns out
-nothing. The gradual accumulation of cruft is annoying, and clutter has a
-negative effect on my state of mind. It's distracting.
-
-Leftover cruft can break things. For example, the other day I couldn't log in to
-the graphical environment. I had to switch to a TTY to find out why using
-`journalctl`:
+The other day I couldn't log in to the graphical environment on my system. I had
+to switch to a TTY to find out why using `journalctl`:
 
 ```
 systemd-xdg-autostart-generator[2375]: Exec binary 'teams' does not exist: No such file or directory
@@ -50,8 +44,9 @@ systemd-xdg-autostart-generator[2375]: /home/will/.config/autostart/teams.deskto
 ```
 
 A `~/.config/autostart/teams.desktop` was left over after uninstalling
-teams[^3]. Also, crap like this trying to bootstrap autostart on
-its own is exactly the sort of thing I want to nuke from orbit.
+teams[^3]. Crap like this trying to bootstrap autostart on its own is exactly
+the sort of thing I want to nuke from orbit. So I'm finally going to give
+impermanence a try.
 
 # The plan
 
@@ -62,7 +57,7 @@ its own is exactly the sort of thing I want to nuke from orbit.
 - Partition with optimal alignment
 - EXT4 for persistence [^4]
 - With or without swap [^5]
-- Opinionated install using nix [flakes](https://nixos.wiki/wiki/Flakes) [^6]
+- Opinionated install using nix [flakes](https://nix.dev/concepts/flakes.html) [^6]
 
 This post is going to be a walk-through of how to try out impermanence with
 NixOS in a VM. I imagine the audience for this post is people who are already
@@ -197,9 +192,6 @@ always end up having permission issues otherwise.
 Once booted into the ISO the first thing I do is right click on the desktop and
 `Configure Display Settings` to change to a higher resolution.
 
-Also consider, View **⇒** Scale Display Always, from the virt-manager window
-running the VM.
-
 # Partitioning
 
 For me `lsblk` shows a disk named `vda`. Below replace `vda` with your disk.
@@ -221,20 +213,17 @@ optimal alignment.
 
 {% end %}
 
-I like to have my partitions in nice clean power of 2 IEC unit sizes (e.g. MiB)
-because that's what most tools default to (e.g. gparted, cfdisk, lsblk, `df -h`
-etc.). However, when using `mkpart` with IEC units or exact sectors parted will
-not search for optimal alignment. It basically assumes you know what you're
-doing. [^7] [^8] [^9]
+When using `parted`, a simple way around alignment issues is to use percentages
+or MB / GB units. When this is done, `parted` effectively searches a calculated
+distance around the given location to find optimal alignment. However, I like to
+have my partitions in nice clean power of 2 IEC unit sizes (e.g. MiB) because
+that's what most tools default to (e.g. `gparted`, `cfdisk`, `lsblk`, `df -h`
+etc.). The problem is when using IEC units or exact sectors, `parted` will not
+search for optimal alignment. It basically assumes you know what you're doing.
+[^7] [^8] [^9]
 
-One simple way around this is to use percentages or MB / GB units. In fact, the
-NixOS manual used to use MiB / GiB for parted, but [it got
-changed](https://github.com/NixOS/nixpkgs/pull/200180) to MB / GB to help avoid
-alignment issues (parted searches a radius around the given position).
-
-What we need to find is the starting sector of the first partition.
-
-A simple trick to do this with `parted` is to:
+What we need to find is the starting sector of the first partition. A simple
+trick to do this with `parted` is to:
 
 ```sh
 sudo parted $DISK --script \
@@ -328,30 +317,18 @@ Repeat the above command with `2` and `3` for the second and third partitions.
 # Format
 
 ```sh
-sudo mkfs.fat -F 32 -n boot ${DISK}1
+sudo mkfs.fat -F 32 -n boot ${DISK}1 && \
+  sudo mkswap -L swap ${DISK}2 && \
+  sudo mkfs.ext4 -L nixos ${DISK}3
 ```
 
 I always ignore the warning:
 
->lowercase labels might not work properly on some systems`
+>lowercase labels might not work properly on some systems
 
-```sh
-sudo mkswap -L swap ${DISK}2
-```
+For no swap remove the `mkswap` line.
 
-```sh
-sudo mkfs.ext4 -L nixos ${DISK}3
-```
-
-For no swap:
-
-```diff
--sudo mkswap -L swap ${DISK}2
--sudo mkfs.ext4 -L nixos ${DISK}3
-+sudo mkfs.ext4 -L nixos ${DISK}2
-```
-
-Verify the partitions and file systems using:
+Visually verify the partitions and file systems using:
 
 ```sh
 sudo parted $DISK -- unit MiB print
@@ -436,8 +413,7 @@ Per Elis's blog post, we need to set some options on the tmpfs root in the
 >openssh) won't be happy with the permissions of the file system.
 >
 >The `size` is something you can adjust depending on how much garbage you are
->willing to store in ram until you run out of space on your root. 2G is usually
->big enough for most of my systems.
+>willing to store in ram until you run out of space on your root...
 
 ```diff
 {
@@ -445,7 +421,7 @@ Per Elis's blog post, we need to set some options on the tmpfs root in the
   fileSystems."/" =
     { device = "none";
       fsType = "tmpfs";
-+     options = [ "defaults" "size=2G" "mode=755" ];
++     options = [ "defaults" "size=25%" "mode=755" ];
     };
   #...
 }
@@ -455,12 +431,31 @@ The following will add the options to the tmpfs root and format the two nix
 files using `nixpkgs-fmt`:
 
 ```sh
-sed -i '/fsType = "tmpfs";/a options = [ "defaults" "size=2G" "mode=755" ];' \
+sed -i '/fsType = "tmpfs";/a options = [ "defaults" "size=25%" "mode=755" ];' \
   ./hardware-configuration.nix && \
   nix-shell -p nixpkgs-fmt --run 'nixpkgs-fmt .'
 ```
 
 # Configure with flakes
+
+If you're not familiar with nix flakes, I recommend reading at least the first
+link below:
+
+- <https://nix.dev/concepts/flakes.html>
+- <https://www.tweag.io/blog/2020-05-25-flakes/>
+- <https://nixos.wiki/wiki/Flakes>
+
+We're getting to the [rest of the
+owl](https://knowyourmeme.com/memes/how-to-draw-an-owl) section that seems
+inevitable with configuring NixOS. To help out, I made an example [starter
+config](https://github.com/willbush/ex-nixos-starter-config) that I configured
+using
+[Misterio77/nix-starter-configs](https://github.com/Misterio77/nix-starter-configs)
+minimal template. So if you're starting out with flakes, then I recommend
+checking out both. I'll talk about this more in the last section of the blog
+post.
+
+Here's how to use my starter config:
 
 ```sh
 git clone https://github.com/willbush/ex-nixos-starter-config.git && \
@@ -492,7 +487,25 @@ sudo nixos-install --flake .#blitzar --no-root-passwd
 reboot
 ```
 
-https://nix-community.github.io/home-manager/index.xhtml#sec-flakes-nixos-module
+If you're using my example starter config, then see its
+[readme](https://github.com/willbush/ex-nixos-starter-config/commit/7009970b2b0b1859ce108d3364ccd94387397b41)
+for credentials and how to change them.
+
+# Rest of the owl
+
+One [important
+difference](https://github.com/willbush/ex-nixos-starter-config/commit/7009970b2b0b1859ce108d3364ccd94387397b41)
+I made when configuring from the minimal
+[Misterio77/nix-starter-configs](https://github.com/Misterio77/nix-starter-configs)
+template is I switched [home
+manager](https://github.com/nix-community/home-manager) to a
+[module](https://nix-community.github.io/home-manager/index.xhtml#sec-flakes-nixos-module)
+within a NixOS system configuration.
+
+This means all the `home.nix` configuration is applied when `nixos-install` is
+run (above) or in the more normal case when using `nixos-rebuild`. Otherwise, we
+would have to use standalone `home-manager` cli tool, and opt-in to persist it's
+changes.
 
 ---
 
