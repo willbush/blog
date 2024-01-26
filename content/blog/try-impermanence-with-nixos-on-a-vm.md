@@ -1,7 +1,7 @@
 +++
 title = "Try impermanence with NixOS on a VM"
 date = 2024-01-08
-draft = true
+draft = false
 
 [taxonomies]
 categories = ["Tech"]
@@ -258,10 +258,10 @@ $ lsblk
 NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
 loop0    7:0    0  3.1G  1 loop /nix/.ro-store
 sr0     11:0    1  3.2G  0 rom  /iso
-vda    253:0    0   30G  0 disk
+vda    253:0    0   40G  0 disk
 ├─vda1 253:1    0  512M  0 part
 ├─vda2 253:2    0    8G  0 part
-└─vda3 253:3    0 21.5G  0 part
+└─vda3 253:3    0 31.5G  0 part
 ```
 
 Check alignment:
@@ -435,6 +435,17 @@ error: getting status of '/mnt/nix/store/21zpkqcn55a73x9y8yy4lrrd7ja3mjvc-source
 {% end %}
 
 # Install
+
+Before installing, I recommend looking over the generated
+`/mnt/etc/nixos/configuration.nix`. It's not going to be used in the install, so
+copy any settings you want into the
+`/mnt/etc/nixos/ex-nixos-starter-config/configuration.nix` file.
+
+If you like rename [blitzar](https://en.wikipedia.org/wiki/Blitzar) to whatever
+hostname you like. I usually name my hosts after astronomical bodies or concepts
+for fun.
+
+From the `/mnt/etc/nixos/ex-nixos-starter-config` directory run:
 
 ```sh
 export NIX_CONFIG="experimental-features = nix-command flakes" && \
