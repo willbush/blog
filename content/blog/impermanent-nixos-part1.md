@@ -1,6 +1,6 @@
 +++
-title = "Try impermanence with NixOS on a VM"
-date = 2024-01-08
+title = "Impermanent NixOS - Part 1: on a VM + tmpfs root + flakes"
+date = 2024-01-27
 draft = true
 
 [taxonomies]
@@ -149,7 +149,7 @@ nice-to-haves such as:
 - xclip for clipboard support in neovim, and other packages I could have
   installed on the fly with nix-env.
 
-Feel free to fork it and/or clone and modify it to your liking.
+Feel free to fork it and modify it to your liking.
 
 # KVM management tool
 
@@ -223,7 +223,7 @@ sudo parted $DISK --script \
   print
 ```
 
-Here are the annotated `parted` commands:
+Here are the annotated `parted` commands from above:
 
 ```sh
 # default units for `print` and `mkpart` commands
@@ -267,10 +267,8 @@ vda    253:0    0   40G  0 disk
 Check alignment:
 
 ```sh
-sudo parted $DISK -- align-check optimal 1
+for i in {1..3}; do sudo parted $DISK -- align-check optimal $i; done
 ```
-
-Repeat the above command with `2` and `3` for the second and third partitions.
 
 # Format
 
@@ -441,7 +439,7 @@ Before installing, I recommend looking over the generated
 copy any settings you want into the
 `/mnt/etc/nixos/ex-nixos-starter-config/configuration.nix` file.
 
-If you like rename [blitzar](https://en.wikipedia.org/wiki/Blitzar) to whatever
+If you like, rename [blitzar](https://en.wikipedia.org/wiki/Blitzar) to whatever
 hostname you like. I usually name my hosts after astronomical bodies or concepts
 for fun.
 
@@ -472,9 +470,11 @@ manager](https://github.com/nix-community/home-manager) to a
 within a NixOS system configuration.
 
 This means all the `home.nix` configuration is applied when `nixos-install` is
-run (above) or in the more normal case when using `nixos-rebuild`. Otherwise, we
-would have to use standalone `home-manager` cli tool, and opt-in to persist it's
-changes.
+run (above) or in the more normal case when using `nixos-rebuild`. I rather not
+have to use the `home-manager` standalone CLI tool. I suppose one might have a
+use-case where they want to configure their home independently of their system.
+I'm not sure what the best approach is, in that case with an ephemeral root, to
+avoid having to run the tool on every boot.
 
 ## Finding optimal alignment
 
