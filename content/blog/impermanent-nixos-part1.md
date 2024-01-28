@@ -56,7 +56,7 @@ impermanence a try.
 - tmpfs as root
 - Partition with optimal alignment
 - EXT4 for persistence [^4]
-- With or without swap [^5]
+- With swap [^5]
 - Opinionated install using nix [flakes](https://nix.dev/concepts/flakes.html) [^6]
 
 This post is going to be a walk-through of how to try out impermanence with
@@ -243,14 +243,6 @@ mkpart nix 8705 100%
 print
 ```
 
-If you don't want swap [^5], then just change these lines:
-
-```diff
--mkpart swap linux-swap 513 8705
--mkpart nix 8705 100%
-+mkpart nix 513 100%
-```
-
 The `lsblk` command should now show the partitions on the disk:
 
 ```sh
@@ -272,17 +264,35 @@ for i in {1..3}; do sudo parted $DISK -- align-check optimal $i; done
 
 # Format
 
+The following will set variables `PART1`, `PART2`, and `PART3` to the partition
+names. I realized when trying this out on a laptop with a nvme drive that simply
+using `${DISK}1` wouldn't work when the disk ends with a number such as
+`nvme0n1`, the partitions end up looking like `nvme0n1p1` etc.
+
 ```sh
-sudo mkfs.fat -F 32 -n boot ${DISK}1 && \
-  sudo mkswap -L swap ${DISK}2 && \
-  sudo mkfs.ext4 -L nixos ${DISK}3
+for i in {1..3};\
+  do export "PART$i"=$(lsblk -lp | grep part | grep ${DISK} | awk -v line=$i 'NR==line{print $1}');\
+done;\
+echo $PART1; echo $PART2; echo $PART3
+```
+
+The output should look similar to:
+
+```
+/dev/vda1
+/dev/vda2
+/dev/vda3
+```
+
+```sh
+sudo mkfs.fat -F 32 -n boot ${PART1} && \
+  sudo mkswap -L swap ${PART2} && \
+  sudo mkfs.ext4 -L nixos ${PART3}
 ```
 
 I always ignore the warning:
 
 >lowercase labels might not work properly on some systems
-
-For no swap remove the `mkswap` line.
 
 Visually verify the partitions and file systems using:
 
@@ -323,8 +333,8 @@ mount -v -t tmpfs none /mnt
 mkdir -v -p /mnt/{boot,nix,etc/nixos,var/log}
 
 # Mount /boot and /nix
-mount -v ${DISK}1 /mnt/boot
-mount -v ${DISK}3 /mnt/nix
+mount -v ${PART1} /mnt/boot
+mount -v ${PART3} /mnt/nix
 
 # Create persistent directories
 mkdir -v -p /mnt/nix/persist/{etc/nixos,var/log}
@@ -345,11 +355,11 @@ chmod u+x ./mount.sh && sudo ./mount.sh
 
 # Configure hardware
 
-If you're using swap, enable it now. Otherwise, it won't get automatically
-configured in your `hardware-configuration.nix`:
+Enable swap now. Otherwise, it won't get automatically configured in your
+`hardware-configuration.nix`:
 
 ```sh
-sudo swapon ${DISK}2
+sudo swapon ${PART2}
 ```
 
 Generate the initial `configuration.nix` and `hardware-configuration.nix`:
@@ -544,7 +554,8 @@ topic again in the future.
 because I have yet to find any argument with experiments to back up claims.
 Here's [an argument in favor of
 swap](https://chrisdown.name/2018/01/02/in-defence-of-swap.html) which I keep
-running across.
+running across. It should be pretty straight forward to remove swap from the
+script snippets above.
 
 [^6]: This blog post is already taking to long. Making it "opinionated" makes it
     easier to write.
