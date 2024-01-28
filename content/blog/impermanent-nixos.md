@@ -55,8 +55,9 @@ impermanence a try.
 - assume UEFI system (no instructions for legacy BIOS)
 - tmpfs as root
 - Partition with optimal alignment
+- Optional LUKS encryption on root
 - EXT4 for persistence [^4]
-- With swap [^5]
+- With swap optionally encrypted with random key [^5]
 - Opinionated install using nix [flakes](https://nix.dev/concepts/flakes.html) [^6]
 
 This post is going to be a walk-through of how to try out impermanence with
@@ -284,11 +285,18 @@ The output should look similar to:
 /dev/vda3
 ```
 
-## Optional LUKS ncryption on root
-
+**Optionally**, LUKS encrypt the root partition:
 
 ```sh
-cryptsetup luksFormat /dev/disk/by-uuid/3f6b0024-3a44-4fde-a43a-767b872abe5d
+sudo cryptsetup luksFormat $PART3
+```
+
+Open the encrypted partition and change the variable to point to the decrypted
+partition:
+
+```sh
+sudo cryptsetup luksOpen $PART3 crypted && \
+  export PART3=/dev/mapper/crypted
 ```
 
 Now format the partitions:
@@ -330,7 +338,7 @@ I'm going to base the following on the excellent
 <https://elis.nu/blog/2020/05/nixos-tmpfs-as-root/> guide.
 
 ```sh
-cat << EOF > ./mount.sh
+cat << 'EOF' > ./mount.sh
 #!/usr/bin/env bash
 
 set -e
@@ -342,8 +350,8 @@ mount -v -t tmpfs none /mnt
 mkdir -v -p /mnt/{boot,nix,etc/nixos,var/log}
 
 # Mount /boot and /nix
-mount -v ${PART1} /mnt/boot -o umask=0077
-mount -v ${PART3} /mnt/nix
+mount -v $PART1 /mnt/boot -o umask=0077
+mount -v $PART3 /mnt/nix
 
 # Create persistent directories
 mkdir -v -p /mnt/nix/persist/{etc/nixos,var/log}
@@ -359,7 +367,7 @@ EOF
 ```
 
 ```sh
-chmod u+x ./mount.sh && sudo ./mount.sh
+chmod u+x ./mount.sh && sudo -E ./mount.sh
 ```
 
 # Configure hardware
@@ -368,7 +376,7 @@ Enable swap now. Otherwise, it won't get automatically configured in your
 `hardware-configuration.nix`:
 
 ```sh
-sudo swapon ${PART2}
+sudo swapon $PART2
 ```
 
 Generate the initial `configuration.nix` and `hardware-configuration.nix`:
@@ -409,6 +417,56 @@ files using `nixpkgs-fmt`:
 sed -i '/fsType = "tmpfs";/a options = [ "defaults" "size=25%" "mode=755" ];' \
   ./hardware-configuration.nix && \
   nix-shell -p nixpkgs-fmt --run 'nixpkgs-fmt .'
+```
+
+# Optional encrypted swap
+
+If you're using LUKS on the root partition, then you might want to [encrypt
+swap](https://nixos.wiki/wiki/Swap). However, the `by-uuid` generated for the
+`swapDevice` in the `hardware-configuration` needs to change to the
+`by-partuuid` because when using the `randomEncryption.enable = true` the
+`by-uuid` changes every boot.
+
+To keep with the theme of the post, I threw together a script to do the work for
+you:
+
+```sh
+cat << 'EOF' > ./encrypt-swap.sh
+#!/usr/bin/env bash
+
+set -e
+
+if [[ -z $PART2 ]]; then
+  echo "PART2 is undefined or empty"
+  exit 1
+fi
+
+hwConfig=/mnt/etc/nixos/hardware-configuration.nix
+backupHwConfig=/mnt/etc/nixos/hardware-configuration.backup.nix
+
+main() {
+  swapPart=$(echo $PART2 | awk -F'/' '{print $NF}')
+  swapDiskUUID=$(ls -l /dev/disk/by-uuid | grep $swapPart | awk '{print $9}')
+  swapPartUUID=$(ls -l /dev/disk/by-partuuid | grep $swapPart | awk '{print $9}')
+
+  echo "swapDiskUUID: $swapDiskUUID"
+  echo "swapPartUUID: $swapPartUUID"
+
+  sed -i "s|by-uuid/$swapDiskUUID|by-partuuid/$swapPartUUID|g" $hwConfig
+  sed -i "/$swapPartUUID/s/\";/\";\n/" $hwConfig
+  sed -i "/$swapPartUUID\"/ a\\randomEncryption.enable = true;" $hwConfig
+
+  nix-shell -p nixpkgs-fmt --run "nixpkgs-fmt $hwConfig"
+}
+
+cp $hwConfig $backupHwConfig
+trap 'cp $backupHwConfig $hwConfig' ERR
+main
+EOF
+```
+
+```sh
+chmod u+x ./encrypt-swap.sh && ./encrypt-swap.sh
 ```
 
 # Configure with flakes
@@ -465,8 +523,8 @@ for fun.
 From the `/mnt/etc/nixos/ex-nixos-starter-config` directory run:
 
 ```sh
-export NIX_CONFIG="experimental-features = nix-command flakes" && \
-sudo nixos-install --flake .#blitzar --no-root-passwd
+NIX_CONFIG="experimental-features = nix-command flakes" \
+  sudo nixos-install --flake .#blitzar --no-root-passwd
 ```
 
 ```sh
