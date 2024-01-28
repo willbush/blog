@@ -1,5 +1,5 @@
 +++
-title = "Impermanent NixOS - Part 1: on a VM + tmpfs root + flakes"
+title = "Impermanent NixOS: on a VM + tmpfs root + flakes"
 date = 2024-01-27
 draft = true
 
@@ -284,6 +284,15 @@ The output should look similar to:
 /dev/vda3
 ```
 
+## Optional LUKS ncryption on root
+
+
+```sh
+cryptsetup luksFormat /dev/disk/by-uuid/3f6b0024-3a44-4fde-a43a-767b872abe5d
+```
+
+Now format the partitions:
+
 ```sh
 sudo mkfs.fat -F 32 -n boot ${PART1} && \
   sudo mkswap -L swap ${PART2} && \
@@ -333,7 +342,7 @@ mount -v -t tmpfs none /mnt
 mkdir -v -p /mnt/{boot,nix,etc/nixos,var/log}
 
 # Mount /boot and /nix
-mount -v ${PART1} /mnt/boot
+mount -v ${PART1} /mnt/boot -o umask=0077
 mount -v ${PART3} /mnt/nix
 
 # Create persistent directories
@@ -531,9 +540,9 @@ Head back to the "Partitioning" section and adjust the values for your `Start`.
 
 ---
 
-[^1]: <https://nixos.wiki/wiki/Impermanence>
+[^1]: [Nixos Wiki Impermanence](https://nixos.wiki/wiki/Impermanence)
 
-[^2]: <https://github.com/nix-community/impermanence>
+[^2]: [Nix Community Impermanence](https://github.com/nix-community/impermanence)
 
 [^3]: Why this breaks the graphical environment I still don't know. Perhaps I
     need to disable `xdg.autostart.enable` which defaults to true?
@@ -560,8 +569,8 @@ script snippets above.
 [^6]: This blog post is already taking to long. Making it "opinionated" makes it
     easier to write.
 
-[^7]: <https://wiki.archlinux.org/title/Parted#Alignment>
+[^7]: [Archlinux Parted Alignment](https://wiki.archlinux.org/title/Parted#Alignment)
 
-[^8]: <https://blog.hqcodeshop.fi/archives/273-GNU-Parted-Solving-the-dreaded-The-resulting-partition-is-not-properly-aligned-for-best-performance.html>
+[^8]: [HQ Code Shop Blog Post on GNU Parted](https://blog.hqcodeshop.fi/archives/273-GNU-Parted-Solving-the-dreaded-The-resulting-partition-is-not-properly-aligned-for-best-performance.html)
 
-[^9]: <https://unix.stackexchange.com/questions/38164/create-partition-aligned-using-parted/401118#401118>
+[^9]: [Unix StackExchange Question on Parted Alignment](https://unix.stackexchange.com/questions/38164/create-partition-aligned-using-parted/401118#401118)
