@@ -1,6 +1,6 @@
 +++
 title = "Impermanent NixOS: on a VM + tmpfs root + flakes + LUKS"
-date = 2024-01-27
+date = 2024-01-29
 draft = false
 
 [taxonomies]
