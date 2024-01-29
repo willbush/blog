@@ -1,5 +1,5 @@
 +++
-title = "Impermanent NixOS: on a VM + tmpfs root + flakes"
+title = "Impermanent NixOS: on a VM + tmpfs root + flakes + LUKS"
 date = 2024-01-27
 draft = true
 
@@ -57,11 +57,21 @@ impermanence a try.
 - Partition with optimal alignment
 - Optional LUKS encryption on root
 - EXT4 for persistence [^4]
-- With swap optionally encrypted with random key [^5]
+- With swap [^5] optionally encrypted with random key
 - Opinionated install using nix [flakes](https://nix.dev/concepts/flakes.html) [^6]
 
 This post is going to be a walk-through of how to try out impermanence with
-NixOS in a VM. I imagine the audience for this post is people who are already
+NixOS in a VM. I have also tested this on a Framework laptop with a nvme drive.
+I have run through the steps many times in a VM to make sure they work and are
+easy to copy, paste, and run.
+
+{% note(header="Important") %}
+
+**I encourage reviewing the code before running.**
+
+{% end %}
+
+I imagine the audience for this post is people who are already
 familiar with NixOS, but I'll try to keep in mind those crazy enough to try
 NixOS, flakes, and impermanence for the first time.
 
@@ -338,7 +348,7 @@ I'm going to base the following on the excellent
 <https://elis.nu/blog/2020/05/nixos-tmpfs-as-root/> guide.
 
 ```sh
-cat << 'EOF' > ./mount.sh
+cat << 'EOF' > ~/mount.sh
 #!/usr/bin/env bash
 
 set -e
@@ -367,7 +377,7 @@ EOF
 ```
 
 ```sh
-chmod u+x ./mount.sh && sudo -E ./mount.sh
+chmod u+x ~/mount.sh && sudo -E ~/mount.sh
 ```
 
 # Configure hardware
@@ -419,7 +429,26 @@ sed -i '/fsType = "tmpfs";/a options = [ "defaults" "size=25%" "mode=755" ];' \
   nix-shell -p nixpkgs-fmt --run 'nixpkgs-fmt .'
 ```
 
-# Optional encrypted swap
+## Increase secruity of the boot mount
+
+You may have noticed when I mounted `boot` I used `umask=0077`. This was to avoid the following warning:
+
+```
+⚠️ Mount point '/boot' which backs the random seed file is world accessible, which is a security hole! ⚠️
+⚠️ Random seed file '/boot/loader/.#bootctlrandom-seedc878009c19a876dc' is world accessible, which is a security hole! ⚠️
+```
+
+There's a [nixpkgs issue](https://github.com/NixOS/nixpkgs/issues/279362) about
+it. The generated `hardware-configuration.nix` does not currently pick up these
+permission options. So lets fix that again with `sed`.
+
+```sh
+sed -i '/fsType = "vfat"/a options = [ "umask=0077" ];' \
+  ./hardware-configuration.nix && \
+  nix-shell -p nixpkgs-fmt --run 'nixpkgs-fmt .'
+```
+
+## Optional encrypted swap
 
 If you're using LUKS on the root partition, then you might want to [encrypt
 swap](https://nixos.wiki/wiki/Swap). However, the `by-uuid` generated for the
@@ -431,7 +460,7 @@ To keep with the theme of the post, I threw together a script to do the work for
 you:
 
 ```sh
-cat << 'EOF' > ./encrypt-swap.sh
+cat << 'EOF' > ~/encrypt-swap.sh
 #!/usr/bin/env bash
 
 set -e
@@ -466,7 +495,7 @@ EOF
 ```
 
 ```sh
-chmod u+x ./encrypt-swap.sh && ./encrypt-swap.sh
+chmod u+x ~/encrypt-swap.sh && ~/encrypt-swap.sh
 ```
 
 # Configure with flakes
@@ -527,13 +556,24 @@ NIX_CONFIG="experimental-features = nix-command flakes" \
   sudo nixos-install --flake .#blitzar --no-root-passwd
 ```
 
+Change `/mnt/etc/nixos` permissions back and reboot:
+
 ```sh
+sudo chmod -v 755 /mnt/etc/nixos && \
 reboot
 ```
 
+{% note(header="Note") %}
+
+Since we're using Nix flakes, there's no requirement for the repo to be under
+`/etc/nixos`. Feel free to change it after rebooting, but make sure you persist
+the directory you decide to store it!
+
+{% end %}
+
 If you're using my example starter config, then see its
-[readme](https://github.com/willbush/ex-nixos-starter-config/commit/7009970b2b0b1859ce108d3364ccd94387397b41)
-for credentials and how to change them.
+[readme](https://github.com/willbush/ex-nixos-starter-config) for credentials
+and how to change them.
 
 # Rest of the owl
 
@@ -552,6 +592,19 @@ have to use the `home-manager` standalone CLI tool. I suppose one might have a
 use-case where they want to configure their home independently of their system.
 I'm not sure what the best approach is, in that case with an ephemeral root, to
 avoid having to run the tool on every boot.
+
+## Documentation
+
+Of course, the real "rest of the owl" is actually configuring your system, and
+there's no way around reading documentation. Here are a few links to get you
+started:
+
+- <https://nixos.org/learn>
+- <https://nix.dev/>
+- <https://zero-to-nix.com/>
+
+The links above have a lot of jumping off points to other resources. Let me know
+if I left anything out.
 
 ## Finding optimal alignment
 
@@ -596,6 +649,20 @@ sudo wipefs -a $DISK
 
 Head back to the "Partitioning" section and adjust the values for your `Start`.
 
+## Harmless error on shutdown
+
+When shutting down or rebooting you might see a flash of red in the logs:
+
+```
+[FAILED] Failed unmounting /nix.
+```
+
+Seems to be related to [this
+issue](https://github.com/nix-community/impermanence/issues/21). Fortunately, it
+seems to be harmless and doesn't cause any delay.
+
+If you want to see the error more clearly, try `sudo halt`.
+
 ---
 
 [^1]: [Nixos Wiki Impermanence](https://nixos.wiki/wiki/Impermanence)
@@ -624,7 +691,7 @@ swap](https://chrisdown.name/2018/01/02/in-defence-of-swap.html) which I keep
 running across. It should be pretty straight forward to remove swap from the
 script snippets above.
 
-[^6]: This blog post is already taking to long. Making it "opinionated" makes it
+[^6]: This blog post is already taking too long. Making it "opinionated" makes it
     easier to write.
 
 [^7]: [Archlinux Parted Alignment](https://wiki.archlinux.org/title/Parted#Alignment)
