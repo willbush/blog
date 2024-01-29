@@ -606,6 +606,20 @@ started:
 The links above have a lot of jumping off points to other resources. Let me know
 if I left anything out.
 
+The [nix-community impermanence
+readme](https://github.com/nix-community/impermanence) is a must read unless you
+decided to not use:
+
+```nix
+{
+  inputs = {
+    # ...
+    impermanence.url = "github:nix-community/impermanence";
+  };
+  # ...
+}
+```
+
 ## Finding optimal alignment
 
 When using `parted`, a simple way around alignment issues is to use percentages
