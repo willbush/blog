@@ -24,6 +24,10 @@ impermanence[^1] [^2], but I like to think of it as:
 
 <!-- more -->
 
+Check out the [video I made](https://www.youtube.com/watch?v=Nts-z1oqo6M)
+introducing this blog post. It might be a good starting point to add some
+context of what you're getting yourself into.
+
 So what is impermanence? To quote the [nix-community impermanence
 readme](https://github.com/nix-community/impermanence):
 
