@@ -58,10 +58,10 @@ impermanence a try.
 - Optional LUKS encryption on root
 - EXT4 for persistence [^4]
 - With swap [^5] optionally encrypted with random key
-- Opinionated install using nix [flakes](https://nix.dev/concepts/flakes.html) [^6]
+- An opinionated install using nix [flakes](https://nix.dev/concepts/flakes.html) [^6]
 
 This post is going to be a walk-through of how to try out impermanence with
-NixOS in a VM. I have also tested this on a Framework laptop with a nvme drive.
+NixOS in a VM. I have also tested this on a Framework laptop with a NVMe drive.
 I have run through the steps many times in a VM to make sure they work and are
 easy to copy, paste, and run.
 
@@ -75,8 +75,8 @@ I imagine the audience for this post is people who are already
 familiar with NixOS, but I'll try to keep in mind those crazy enough to try
 NixOS, flakes, and impermanence for the first time.
 
-I personally try this sort of thing in a VM first. I did so when migrating to
-NixOS. And again, when I rewrote my config for nix flakes. This time, as I'm
+I personally try this sort of thing in a VM first. For example, when migrating
+to NixOS. And again, when I rewrote my config for nix flakes. This time, as I'm
 migrating to impermanence, I want to document the process better. Hopefully,
 this will make it easier for others to try it out too.
 
@@ -165,11 +165,11 @@ Feel free to fork it and modify it to your liking.
 # KVM management tool
 
 I'm using [virt-manager](https://virt-manager.org/) as the front-end for
-libvirt. If you're on NixOS see: <https://nixos.wiki/wiki/Virt-manager> for
+libvirt. If you're on NixOS, see: <https://nixos.wiki/wiki/Virt-manager> for
 install instructions. I also experimented with <https://cockpit-project.org/>,
 but ran into problems.
 
-These days most computers use UEFI instead of BIOS for the firmware. I'm going
+These days, most computers use UEFI instead of BIOS for the firmware. I'm going
 to assume no one needs BIOS to simplify these instructions.
 
 For me, virt-manager uses BIOS by default, to change this:
@@ -181,7 +181,7 @@ after selecting the disk size:
 
 1. Check the `Customize configuration before install` **⇒** Finish.
 
-2. In the Overview section change the Firmware from BIOS to UEFI **⇒** Apply
+2. In the Overview section, change the Firmware from BIOS to UEFI **⇒** Apply
 
 # Fire up the VM
 
@@ -200,14 +200,14 @@ always end up having permission issues otherwise.
 
 5. Begin Installation
 
-Once booted into the ISO the first thing I do is right click on the desktop and
+Once booted into the ISO, the first thing I do is right-click on the desktop and
 `Configure Display Settings` to change to a higher resolution.
 
 # Partitioning
 
-For me `lsblk` shows a disk named `vda`. Below replace `vda` with your disk.
+For me, `lsblk` shows a disk named `vda`. Replace `vda` with your disk below.
 
-Setup a variable for the disk which will be used in the following commands:
+Set up a variable for the disk which will be used in the following commands:
 
 ```sh
 export DISK=/dev/vda
@@ -276,7 +276,7 @@ for i in {1..3}; do sudo parted $DISK -- align-check optimal $i; done
 # Format
 
 The following will set variables `PART1`, `PART2`, and `PART3` to the partition
-names. I realized when trying this out on a laptop with a nvme drive that simply
+names. I realized when trying this out on a laptop with a NVMe drive that simply
 using `${DISK}1` wouldn't work when the disk ends with a number such as
 `nvme0n1`, the partitions end up looking like `nvme0n1p1` etc.
 
@@ -429,7 +429,7 @@ sed -i '/fsType = "tmpfs";/a options = [ "defaults" "size=25%" "mode=755" ];' \
   nix-shell -p nixpkgs-fmt --run 'nixpkgs-fmt .'
 ```
 
-## Increase secruity of the boot mount
+## Increase security of the boot mount
 
 You may have noticed when I mounted `boot` I used `umask=0077`. This was to avoid the following warning:
 
@@ -440,7 +440,7 @@ You may have noticed when I mounted `boot` I used `umask=0077`. This was to avoi
 
 There's a [nixpkgs issue](https://github.com/NixOS/nixpkgs/issues/279362) about
 it. The generated `hardware-configuration.nix` does not currently pick up these
-permission options. So lets fix that again with `sed`.
+permission options. So let's fix that again using `sed`.
 
 ```sh
 sed -i '/fsType = "vfat"/a options = [ "umask=0077" ];' \
@@ -541,8 +541,8 @@ error: getting status of '/mnt/nix/store/21zpkqcn55a73x9y8yy4lrrd7ja3mjvc-source
 # Install
 
 Before installing, I recommend looking over the generated
-`/mnt/etc/nixos/configuration.nix`. It's not going to be used in the install, so
-copy any settings you want into the
+`/mnt/etc/nixos/configuration.nix`. It's not going to be used in the
+installation, so copy any settings you want into the
 `/mnt/etc/nixos/ex-nixos-starter-config/configuration.nix` file.
 
 If you like, rename [blitzar](https://en.wikipedia.org/wiki/Blitzar) to whatever
@@ -590,8 +590,8 @@ This means all the `home.nix` configuration is applied when `nixos-install` is
 run (above) or in the more normal case when using `nixos-rebuild`. I rather not
 have to use the `home-manager` standalone CLI tool. I suppose one might have a
 use-case where they want to configure their home independently of their system.
-I'm not sure what the best approach is, in that case with an ephemeral root, to
-avoid having to run the tool on every boot.
+I'm not sure what the best approach is to avoid having to run the tool on every
+boot.
 
 ## Documentation
 
@@ -607,10 +607,11 @@ The links above have a lot of jumping off points to other resources. Let me know
 if I left anything out.
 
 The [nix-community impermanence
-readme](https://github.com/nix-community/impermanence) is a must read unless you
+readme](https://github.com/nix-community/impermanence) is a must-read unless you
 decided to not use:
 
 ```nix
+# flake.nix
 {
   inputs = {
     # ...
@@ -642,7 +643,7 @@ sudo parted $DISK --script \
   rm 1
 ```
 
-This will print out something like this the following. Note the `Start`.
+This will print out something like the following. Note the `Start`.
 
 ```
 Model: Virtio Block Device (virtblk)
@@ -665,7 +666,7 @@ Head back to the "Partitioning" section and adjust the values for your `Start`.
 
 ## Harmless error on shutdown
 
-When shutting down or rebooting you might see a flash of red in the logs:
+When shutting down or rebooting, you might see a flash of red in the logs:
 
 ```
 [FAILED] Failed unmounting /nix.
