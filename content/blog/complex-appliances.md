@@ -172,3 +172,8 @@ $60, but wasn't too hard to replace.
 
 We have a Whirlpool dryer since about 2004 too. I replaced the heating element
 once a few years ago. Obviously, no extraneous features to worry about there.
+
+# Discussion
+
+- <https://news.ycombinator.com/item?id=39238010>
+- <https://slrpnk.net/post/4915674>
