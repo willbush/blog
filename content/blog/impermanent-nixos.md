@@ -9,7 +9,6 @@ tags = ["nixos", "linux", "impermanence"]
 
 [extra]
 toc = true
-comment = true
 copy = true
 math = false
 mermaid = false

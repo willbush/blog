@@ -10,7 +10,6 @@ tags = ["rant", "kiss"]
 
 [extra]
 toc = true
-comment = true
 copy = false
 math = false
 mermaid = false

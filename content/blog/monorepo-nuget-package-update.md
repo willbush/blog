@@ -9,7 +9,6 @@ tags = ["dotnet", "csharp", "bash", "github actions"]
 
 [extra]
 toc = true
-comment = true
 copy = true
 math = false
 mermaid = false

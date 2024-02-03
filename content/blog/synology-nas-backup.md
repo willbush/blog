@@ -9,7 +9,6 @@ tags = ["tools", "linux"]
 
 [extra]
 toc = true
-comment = true
 copy = true
 math = false
 mermaid = false
