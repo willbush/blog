@@ -147,8 +147,10 @@ away the GE refrigerator.
 # Keep it simple, stupid!
 
 Based on [this video](https://www.youtube.com/watch?v=rKJgYVhZ6-w), We are
-upgrading to simplicity. Top freezer refrigerator. I'll get an ice maker add-on
-(no dispenser) and a water pitcher for filtered water.
+upgrading to simplicity. Top freezer refrigerator. ~~I'll get an ice maker
+add-on~~ (no dispenser) and a water pitcher for filtered water. After using ice
+trays for a few weeks, we decided it's actually not that bad and returned the
+ice maker.
 
 We haven't decided on brand / model yet. I understand that the long-lasting
 refrigerator in my garage is probably a coincidence.
