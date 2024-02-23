@@ -596,6 +596,66 @@ use-case where they want to configure their home independently of their system.
 I'm not sure what the best approach is to avoid having to run the tool on every
 boot.
 
+## Find what to perist
+
+Hi, it's me from the future. I've been using this setup for a couple of weeks.
+One thing that's helpful is to be able to find differences between the
+`/nix/persist` and `/` directories. I use `rsync` with `--dry-run` to do this:
+
+```sh
+sudo rsync -amvxx \
+  --dry-run \
+  --no-links \
+  --exclude '/tmp/*' \
+  --exclude '/root/*' \
+  / /nix/persist/ \
+  | rg -v '^skipping|/$'
+```
+
+Here is some documentation on the options used:
+
+```
+     --no-OPTION             turn off an implied OPTION (e.g. --no-D)
+ -a, --archive               archive mode; equals -rlptgoD (no -H,-A,-X)
+ -c, --checksum              skip based on checksum, not mod-time & size
+ -m, --prune-empty-dirs      prune empty directory chains from file-list
+ -n, --dry-run               perform a trial run with no changes made
+ -v, --verbose               increase verbosity
+ -x, --one-file-system       don't cross filesystem boundaries
+
+    If this option is repeated, rsync omits all mount-point directories from the
+    copy. Otherwise, it includes an empty directory at each mount-point it
+    encounters (using the attributes of the mounted directory because those of
+    the underlying mount-point directory are inaccessible).
+```
+
+However, note I'm not using `-c, --checksum` because it's slower and seems to be
+overkill.
+
+I exclude `/tmp` and `/root` because I don't want to persist those directories.
+
+I use `rg` ([ripgrep](https://github.com/BurntSushi/ripgrep)) to filter out results.
+Such as lines starting with `skipping`:
+```
+skipping non-regular file "home/will/.local/state/home-manager/gcroots/current-home"
+skipping non-regular file "home/will/.local/state/nix/profiles/home-manager"
+...
+```
+
+or ending with `/`:
+
+```
+home/will/.config/hypr/
+home/will/.config/mako/
+home/will/.config/nvim/
+home/will/.config/swaylock/
+home/will/.config/systemd/
+...
+```
+
+You can also reverse the source / destination to find orphaned files in the
+`/nix/persist` directory.
+
 ## Documentation
 
 Of course, the real "rest of the owl" is actually configuring your system, and
