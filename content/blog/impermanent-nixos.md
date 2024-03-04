@@ -596,7 +596,7 @@ use-case where they want to configure their home independently of their system.
 I'm not sure what the best approach is to avoid having to run the tool on every
 boot.
 
-## Finding what to perist
+## Finding what to persist
 
 Hi, it's me from the future. I've been using this setup for a couple of weeks.
 One thing that's helpful is to be able to find differences between the
