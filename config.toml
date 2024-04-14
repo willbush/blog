@@ -46,7 +46,7 @@ avatar = "img/avatar.webp"            # Your avatar
 links = [                             # Your links
     { name = "GitHub", icon = "github", url = "https://github.com/willbush" },
     { name = "Mastodon", icon = "mastodon", url = "https://fosstodon.org/@willbush" },
-    { name = "Email", icon = "email", url = "mailto:will.g.bush@gmail.com" }
+    { name = "Email", icon = "email", url = "mailto:blog@willbush.dev" }
 ]
 
 homepage_layout = "about"             # "about" | "list"
