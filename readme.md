@@ -12,3 +12,9 @@ git clone https://github.com/willbush/blog.git --recurse-submodules
 cd blog
 zola serve
 ```
+
+## Deployed via direct upload
+
+I find clouldflare build and zola support janky so I use direct upload via CI:
+
+https://developers.cloudflare.com/pages/how-to/use-direct-upload-with-continuous-integration/
