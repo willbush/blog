@@ -13,6 +13,8 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v6
+        with:
+          submodules: recursive
       - uses: DeterminateSystems/determinate-nix-action@main
       - uses: DeterminateSystems/magic-nix-cache-action@main
       - name: Build
